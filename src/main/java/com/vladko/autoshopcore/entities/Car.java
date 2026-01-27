@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.client.entity.Customer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

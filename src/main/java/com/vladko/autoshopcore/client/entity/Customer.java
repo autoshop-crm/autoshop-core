@@ -1,4 +1,4 @@
-package com.vladko.autoshopcore.entities;
+package com.vladko.autoshopcore.client.entity;
 
 
 import jakarta.persistence.*;

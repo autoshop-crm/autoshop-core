@@ -1,8 +1,8 @@
 package com.vladko.autoshopcore.entities;
 
 public enum EmployeeType {
+    ADMIN,
     MANAGER,
-    CUSTOMER,
     MECHANIC,
-    BOSS
+    RECEPTIONIST
 }

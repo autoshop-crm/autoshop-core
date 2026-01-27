@@ -22,7 +22,8 @@ public class LoyaltyTransactions {
     @Size(max = 30)
     @NotNull
     @Column(name = "operation_type", nullable = false, length = 30)
-    private String operationType;
+    @Enumerated(EnumType.STRING)
+    private OperationType operationType;
 
     @NotNull
     @Column(name = "count_scores", nullable = false)

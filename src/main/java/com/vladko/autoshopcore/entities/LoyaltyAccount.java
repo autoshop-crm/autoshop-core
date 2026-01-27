@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.client.entity.Customer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -18,6 +19,16 @@ public class LoyaltyAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "accountid", nullable = false)
     private Integer id;
+
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tier_id", nullable = false)
+    private LoyaltyTiers tier;
 
     @NotNull
     @ColumnDefault("0")
