@@ -36,5 +36,10 @@ out/
 ### VS Code ###
 .vscode/
 
+### macOS ###
+.DS_Store
+
 ### Local Configuration ###
 application-local.properties
+
+/ContextProject/*
