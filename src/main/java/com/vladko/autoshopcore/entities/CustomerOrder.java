@@ -1,7 +1,9 @@
 package com.vladko.autoshopcore.entities;
 
 import com.vladko.autoshopcore.client.entity.Customer;
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +18,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Entity(name = "customer_order")
-public class CustomerOrder {
+public class CustomerOrder implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

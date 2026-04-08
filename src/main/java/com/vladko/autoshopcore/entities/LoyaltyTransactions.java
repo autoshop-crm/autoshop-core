@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -18,7 +19,12 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @Entity
-public class LoyaltyTransactions {
+public class LoyaltyTransactions implements BaseEntity<Integer> {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "transactionid", nullable = false)
+    private Integer id;
+
     @Size(max = 30)
     @NotNull
     @Column(name = "operation_type", nullable = false, length = 30)
@@ -43,8 +49,4 @@ public class LoyaltyTransactions {
     @JoinColumn(name = "account_id", nullable = false)
     private LoyaltyAccount account;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transactionid", nullable = false)
-    private Integer id;
 }

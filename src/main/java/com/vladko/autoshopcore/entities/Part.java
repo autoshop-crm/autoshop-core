@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,7 +18,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 @Entity
-public class Part {
+public class Part implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

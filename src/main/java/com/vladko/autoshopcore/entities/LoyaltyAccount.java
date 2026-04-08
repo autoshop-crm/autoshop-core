@@ -1,6 +1,7 @@
 package com.vladko.autoshopcore.entities;
 
 import com.vladko.autoshopcore.client.entity.Customer;
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "loyalty_accounts")
-public class LoyaltyAccount {
+public class LoyaltyAccount implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "accountid", nullable = false)

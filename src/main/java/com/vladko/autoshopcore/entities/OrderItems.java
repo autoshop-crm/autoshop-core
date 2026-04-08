@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @Entity(name = "Order_Items")
-public class OrderItems {
+public class OrderItems implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

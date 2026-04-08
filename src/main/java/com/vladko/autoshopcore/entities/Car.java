@@ -1,6 +1,7 @@
 package com.vladko.autoshopcore.entities;
 
 import com.vladko.autoshopcore.client.entity.Customer;
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,14 +16,14 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @Entity
-public class Car {
+public class Car implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
-    Customer customerId;
+    Customer customer;
 
     @Column(name = "brand", nullable = false)
     String brand;
