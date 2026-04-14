@@ -40,6 +40,10 @@ out/
 .DS_Store
 
 ### Local Configuration ###
-application-local.properties
+.env
+.env.local
+.env.*.local
+src/main/resources/application-local.properties
+src/main/resources/application-*.local.properties
 
 /ContextProject/*
