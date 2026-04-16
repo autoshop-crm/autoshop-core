@@ -13,12 +13,12 @@ import lombok.NoArgsConstructor;
 public class CustomerCreateDTO {
     @NotNull
     @NotBlank
-    @Size(min = 2, max = 64)
+    @Size(min = 2, max = 50)
     private String firstName;
 
     @NotNull
     @NotBlank
-    @Size(min = 2, max = 64)
+    @Size(min = 2, max = 50)
     private String lastName;
 
     @NotNull
@@ -29,5 +29,6 @@ public class CustomerCreateDTO {
     @NotNull
     @NotBlank
     @Email
+    @Size(max = 50)
     private String email;
 }

@@ -12,15 +12,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CustomerUpdateDTO {
-    @Size(min = 2, max = 64)
+    @Pattern(regexp = "^(?!\\s*$).{2,50}$")
     private String firstName;
 
-    @Size(min = 2, max = 64)
+    @Pattern(regexp = "^(?!\\s*$).{2,50}$")
     private String lastName;
 
     @Pattern(regexp = "^\\+?[0-9]{10,15}$")
     private String phoneNumber;
 
     @Email
+    @Size(max = 50)
     private String email;
 }

@@ -139,3 +139,7 @@ CREATE TABLE Loyalty_transactions
     operation_type   VARCHAR(30) NOT NULL -- Hibernate enum
 );
 --rollback DROP TABLE Loyalty_transactions;
+
+--changeset progko:12
+CREATE UNIQUE INDEX IF NOT EXISTS uk_customer_phone_number ON Customer (phone_number);
+--rollback DROP INDEX IF EXISTS uk_customer_phone_number;
