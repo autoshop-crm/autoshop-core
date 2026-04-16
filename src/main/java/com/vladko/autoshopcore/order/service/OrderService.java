@@ -1,6 +1,8 @@
 package com.vladko.autoshopcore.order.service;
 
+import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
+import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderResponseDTO;
 import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderUpdateDTO;
@@ -15,6 +17,10 @@ public interface OrderService {
     OrderResponseDTO getById(Integer id);
 
     OrderResponseDTO update(Integer id, OrderUpdateDTO dto);
+
+    OrderResponseDTO assignEmployee(Integer id, OrderAssignmentDTO dto);
+
+    OrderResponseDTO updateEstimate(Integer id, OrderEstimateUpdateDTO dto);
 
     OrderResponseDTO updateStatus(Integer id, OrderStatusUpdateDTO dto);
 

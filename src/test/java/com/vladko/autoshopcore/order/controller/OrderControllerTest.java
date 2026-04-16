@@ -1,7 +1,9 @@
 package com.vladko.autoshopcore.order.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
+import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderResponseDTO;
 import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
@@ -133,6 +135,108 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Employee with id '99' was not found"));
+    }
+
+    @Test
+    void assignEmployeeShouldReturnUpdatedOrder() throws Exception {
+        when(orderService.assignEmployee(any(Integer.class), any(OrderAssignmentDTO.class))).thenReturn(
+                OrderResponseDTO.builder()
+                        .id(10)
+                        .customerId(1)
+                        .vehicleId(2)
+                        .employeeId(21)
+                        .problem("Diagnostics")
+                        .status(OrderStatus.NEW)
+                        .costsTotal(BigDecimal.ZERO)
+                        .discountAmount(BigDecimal.ZERO)
+                        .finalAmount(BigDecimal.ZERO)
+                        .createdAt(Instant.parse("2026-04-14T10:15:30Z"))
+                        .updatedAt(Instant.parse("2026-04-14T10:20:30Z"))
+                        .build()
+        );
+
+        mockMvc.perform(put("/api/orders/10/assign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                OrderAssignmentDTO.builder().employeeId(21).build()
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.employeeId").value(21));
+    }
+
+    @Test
+    void assignEmployeeShouldReturnConflictForInvalidAssignment() throws Exception {
+        when(orderService.assignEmployee(any(Integer.class), any(OrderAssignmentDTO.class)))
+                .thenThrow(new OrderConflictException("Only mechanic or manager can be assigned to order"));
+
+        mockMvc.perform(put("/api/orders/10/assign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                OrderAssignmentDTO.builder().employeeId(21).build()
+                        )))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Only mechanic or manager can be assigned to order"));
+    }
+
+    @Test
+    void updateEstimateShouldReturnUpdatedOrder() throws Exception {
+        when(orderService.updateEstimate(any(Integer.class), any(OrderEstimateUpdateDTO.class))).thenReturn(
+                OrderResponseDTO.builder()
+                        .id(10)
+                        .customerId(1)
+                        .vehicleId(2)
+                        .problem("Diagnostics")
+                        .status(OrderStatus.NEW)
+                        .costsTotal(new BigDecimal("100.00"))
+                        .discountAmount(new BigDecimal("15.00"))
+                        .finalAmount(new BigDecimal("85.00"))
+                        .createdAt(Instant.parse("2026-04-14T10:15:30Z"))
+                        .updatedAt(Instant.parse("2026-04-14T10:20:30Z"))
+                        .build()
+        );
+
+        mockMvc.perform(put("/api/orders/10/estimate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                OrderEstimateUpdateDTO.builder()
+                                        .costsTotal(new BigDecimal("100.00"))
+                                        .discountAmount(new BigDecimal("15.00"))
+                                        .build()
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.finalAmount").value(85.00));
+    }
+
+    @Test
+    void updateEstimateShouldReturnBadRequestForNegativeValues() throws Exception {
+        mockMvc.perform(put("/api/orders/10/estimate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                OrderEstimateUpdateDTO.builder()
+                                        .costsTotal(new BigDecimal("-1.00"))
+                                        .discountAmount(BigDecimal.ZERO)
+                                        .build()
+                        )))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void updateEstimateShouldReturnConflictForInvalidEstimate() throws Exception {
+        when(orderService.updateEstimate(any(Integer.class), any(OrderEstimateUpdateDTO.class)))
+                .thenThrow(new OrderConflictException("Discount amount cannot exceed total costs"));
+
+        mockMvc.perform(put("/api/orders/10/estimate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                OrderEstimateUpdateDTO.builder()
+                                        .costsTotal(new BigDecimal("100.00"))
+                                        .discountAmount(new BigDecimal("120.00"))
+                                        .build()
+                        )))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Discount amount cannot exceed total costs"));
     }
 
     @Test

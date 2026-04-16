@@ -4,7 +4,10 @@ import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.entities.Employee;
+import com.vladko.autoshopcore.entities.EmployeeType;
+import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
+import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderResponseDTO;
 import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderUpdateDTO;
@@ -26,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
         Vehicle vehicle = findVehicle(dto.getVehicleId());
         validateCustomerVehicleConsistency(customer, vehicle);
 
-        Employee employee = dto.getEmployeeId() == null ? null : findEmployee(dto.getEmployeeId());
+        Employee employee = dto.getEmployeeId() == null ? null : findAssignableEmployee(dto.getEmployeeId());
 
         Order order = Order.builder()
                 .customer(customer)
@@ -76,9 +80,27 @@ public class OrderServiceImpl implements OrderService {
             order.setProblem(normalizedProblem);
         }
 
-        if (dto.getEmployeeId() != null) {
-            order.setEmployee(findEmployee(dto.getEmployeeId()));
-        }
+        return mapToResponse(orderRepository.save(order));
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDTO assignEmployee(Integer id, OrderAssignmentDTO dto) {
+        Order order = findOrder(id);
+        ensureOrderIsMutable(order);
+
+        Employee employee = findAssignableEmployee(dto.getEmployeeId());
+        order.setEmployee(employee);
+
+        return mapToResponse(orderRepository.save(order));
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDTO updateEstimate(Integer id, OrderEstimateUpdateDTO dto) {
+        Order order = findOrder(id);
+        ensureEstimateIsEditable(order);
+        applyEstimate(order, dto.getCostsTotal(), dto.getDiscountAmount());
 
         return mapToResponse(orderRepository.save(order));
     }
@@ -89,7 +111,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = findOrder(id);
         OrderStatus targetStatus = dto.getStatus();
 
+        if (order.getStatus() == targetStatus) {
+            return mapToResponse(order);
+        }
+
         validateStatusTransition(order.getStatus(), targetStatus);
+        validateStatusGuards(order, targetStatus);
 
         order.setStatus(targetStatus);
         if (targetStatus == OrderStatus.COMPLETED) {
@@ -150,6 +177,14 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
     }
 
+    private Employee findAssignableEmployee(Integer id) {
+        Employee employee = findEmployee(id);
+        if (employee.getFunction() != EmployeeType.MECHANIC && employee.getFunction() != EmployeeType.MANAGER) {
+            throw new OrderConflictException("Only mechanic or manager can be assigned to order");
+        }
+        return employee;
+    }
+
     private void validateCustomerVehicleConsistency(Customer customer, Vehicle vehicle) {
         if (!vehicle.getCustomer().getId().equals(customer.getId())) {
             throw new OrderConflictException("Vehicle does not belong to the specified customer");
@@ -164,11 +199,15 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus targetStatus) {
-        if (currentStatus == targetStatus) {
-            return;
+    private void ensureEstimateIsEditable(Order order) {
+        if (order.getStatus() != OrderStatus.NEW && order.getStatus() != OrderStatus.IN_PROGRESS) {
+            throw new InvalidOrderStateException(
+                    "Order in status '%s' can no longer be updated".formatted(order.getStatus())
+            );
         }
+    }
 
+    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus targetStatus) {
         boolean validTransition = switch (currentStatus) {
             case NEW -> targetStatus == OrderStatus.IN_PROGRESS || targetStatus == OrderStatus.CANCELLED;
             case IN_PROGRESS -> targetStatus == OrderStatus.COMPLETED || targetStatus == OrderStatus.CANCELLED;
@@ -182,8 +221,41 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    private void validateStatusGuards(Order order, OrderStatus targetStatus) {
+        if (targetStatus == OrderStatus.IN_PROGRESS) {
+            if (order.getEmployee() == null || order.getEmployee().getFunction() != EmployeeType.MECHANIC) {
+                throw new InvalidOrderStateException("Order must have an assigned mechanic before moving to IN_PROGRESS");
+            }
+        }
+
+        if (targetStatus == OrderStatus.COMPLETED && order.getFinalAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidOrderStateException("Order estimate must be calculated before moving to COMPLETED");
+        }
+    }
+
     private boolean isTerminal(OrderStatus status) {
         return status == OrderStatus.COMPLETED || status == OrderStatus.CANCELLED;
+    }
+
+    private void applyEstimate(Order order, BigDecimal costsTotal, BigDecimal discountAmount) {
+        validateEstimateValues(costsTotal, discountAmount);
+
+        order.setCostsTotal(costsTotal);
+        order.setDiscountAmount(discountAmount);
+        order.setFinalAmount(costsTotal.subtract(discountAmount));
+    }
+
+    private void validateEstimateValues(BigDecimal costsTotal, BigDecimal discountAmount) {
+        Objects.requireNonNull(costsTotal, "Costs total must not be null");
+        Objects.requireNonNull(discountAmount, "Discount amount must not be null");
+
+        if (costsTotal.compareTo(BigDecimal.ZERO) < 0 || discountAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new OrderConflictException("Estimate amounts cannot be negative");
+        }
+
+        if (discountAmount.compareTo(costsTotal) > 0) {
+            throw new OrderConflictException("Discount amount cannot exceed total costs");
+        }
     }
 
     private OrderResponseDTO mapToResponse(Order order) {

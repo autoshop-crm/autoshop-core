@@ -1,7 +1,6 @@
 package com.vladko.autoshopcore.order.dto;
 
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class OrderUpdateDTO {
-    @Pattern(regexp = "^(?!\\s*$).{1,1000}$")
-    private String problem;
+public class OrderAssignmentDTO {
+    @NotNull
+    private Integer employeeId;
 }

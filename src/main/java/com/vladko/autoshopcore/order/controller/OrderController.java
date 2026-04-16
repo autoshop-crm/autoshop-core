@@ -1,6 +1,8 @@
 package com.vladko.autoshopcore.order.controller;
 
+import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
+import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderResponseDTO;
 import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderUpdateDTO;
@@ -35,6 +37,18 @@ public class OrderController {
     public ResponseEntity<OrderResponseDTO> update(@PathVariable Integer id,
                                                    @Valid @RequestBody OrderUpdateDTO dto) {
         return ResponseEntity.ok(orderService.update(id, dto));
+    }
+
+    @PutMapping("/{id}/assign")
+    public ResponseEntity<OrderResponseDTO> assignEmployee(@PathVariable Integer id,
+                                                           @Valid @RequestBody OrderAssignmentDTO dto) {
+        return ResponseEntity.ok(orderService.assignEmployee(id, dto));
+    }
+
+    @PutMapping("/{id}/estimate")
+    public ResponseEntity<OrderResponseDTO> updateEstimate(@PathVariable Integer id,
+                                                           @Valid @RequestBody OrderEstimateUpdateDTO dto) {
+        return ResponseEntity.ok(orderService.updateEstimate(id, dto));
     }
 
     @PutMapping("/{id}/status")
