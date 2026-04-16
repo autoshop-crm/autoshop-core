@@ -1,7 +1,7 @@
-package com.vladko.autoshopcore.client.entity;
+package com.vladko.autoshopcore.vehicle.entity;
 
+import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.shared.entities.BaseEntity;
-import com.vladko.autoshopcore.vehicle.entity.Vehicle;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,30 +10,33 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
-import java.util.List;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "customer")
-public class Customer implements BaseEntity<Integer> {
+@Table(name = "vehicle")
+public class Vehicle implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "first_name", nullable = false, length = 50)
-    private String firstName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    @Column(name = "last_name", nullable = false, length = 50)
-    private String lastName;
+    @Column(name = "brand", nullable = false, length = 25)
+    private String brand;
 
-    @Column(name = "email", unique = true, nullable = false, length = 50)
-    private String email;
+    @Column(name = "model", nullable = false, length = 25)
+    private String model;
 
-    @Column(name = "phone_number", unique = true, nullable = false, length = 16)
-    private String phoneNumber;
+    @Column(name = "vin", unique = true, nullable = false, length = 17)
+    private String vin;
+
+    @Column(name = "license_plate", unique = true, nullable = false, length = 12)
+    private String licensePlate;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
@@ -42,9 +45,6 @@ public class Customer implements BaseEntity<Integer> {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "updated_at")
     private Instant updatedAt;
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Vehicle> vehicles;
 
     @PrePersist
     private void prePersist() {

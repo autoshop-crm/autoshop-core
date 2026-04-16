@@ -2,8 +2,8 @@ package com.vladko.autoshopcore.entities;
 
 import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.shared.entities.BaseEntity;
+import com.vladko.autoshopcore.vehicle.entity.Vehicle;
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,8 +28,8 @@ public class CustomerOrder implements BaseEntity<Integer> {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "car_id", nullable = false)
-    private Car car;
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)

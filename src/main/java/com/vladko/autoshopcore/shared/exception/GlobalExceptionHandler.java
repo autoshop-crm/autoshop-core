@@ -2,6 +2,8 @@ package com.vladko.autoshopcore.shared.exception;
 
 import com.vladko.autoshopcore.client.exception.CustomerConflictException;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
+import com.vladko.autoshopcore.vehicle.exception.VehicleConflictException;
+import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomerConflictException.class)
     public ResponseEntity<ErrorResponse> handleCustomerConflict(CustomerConflictException exception,
+                                                               HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(VehicleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVehicleNotFound(VehicleNotFoundException exception,
+                                                               HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(VehicleConflictException.class)
+    public ResponseEntity<ErrorResponse> handleVehicleConflict(VehicleConflictException exception,
                                                                HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
