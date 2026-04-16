@@ -2,6 +2,10 @@ package com.vladko.autoshopcore.shared.exception;
 
 import com.vladko.autoshopcore.client.exception.CustomerConflictException;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
+import com.vladko.autoshopcore.order.exception.EmployeeNotFoundException;
+import com.vladko.autoshopcore.order.exception.InvalidOrderStateException;
+import com.vladko.autoshopcore.order.exception.OrderConflictException;
+import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
 import com.vladko.autoshopcore.vehicle.exception.VehicleConflictException;
 import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +44,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(VehicleConflictException.class)
     public ResponseEntity<ErrorResponse> handleVehicleConflict(VehicleConflictException exception,
                                                                HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException exception,
+                                                             HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(EmployeeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEmployeeNotFound(EmployeeNotFoundException exception,
+                                                                HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(OrderConflictException.class)
+    public ResponseEntity<ErrorResponse> handleOrderConflict(OrderConflictException exception,
+                                                             HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidOrderStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOrderState(InvalidOrderStateException exception,
+                                                                 HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 

@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.order.entity.Order;
 import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -41,7 +42,7 @@ public class LoyaltyTransactions implements BaseEntity<Integer> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
-    private CustomerOrder order;
+    private Order order;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
