@@ -61,6 +61,8 @@ class OrderControllerTest {
                 .vehicleId(2)
                 .problem("Diagnostics")
                 .status(OrderStatus.NEW)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -147,6 +149,8 @@ class OrderControllerTest {
                         .employeeId(21)
                         .problem("Diagnostics")
                         .status(OrderStatus.NEW)
+                        .laborTotal(BigDecimal.ZERO)
+                        .partsTotal(BigDecimal.ZERO)
                         .costsTotal(BigDecimal.ZERO)
                         .discountAmount(BigDecimal.ZERO)
                         .finalAmount(BigDecimal.ZERO)
@@ -188,6 +192,8 @@ class OrderControllerTest {
                         .vehicleId(2)
                         .problem("Diagnostics")
                         .status(OrderStatus.NEW)
+                        .laborTotal(new BigDecimal("100.00"))
+                        .partsTotal(BigDecimal.ZERO)
                         .costsTotal(new BigDecimal("100.00"))
                         .discountAmount(new BigDecimal("15.00"))
                         .finalAmount(new BigDecimal("85.00"))
@@ -200,11 +206,12 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 OrderEstimateUpdateDTO.builder()
-                                        .costsTotal(new BigDecimal("100.00"))
+                                        .laborTotal(new BigDecimal("100.00"))
                                         .discountAmount(new BigDecimal("15.00"))
                                         .build()
                         )))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.laborTotal").value(100.00))
                 .andExpect(jsonPath("$.finalAmount").value(85.00));
     }
 
@@ -214,7 +221,7 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 OrderEstimateUpdateDTO.builder()
-                                        .costsTotal(new BigDecimal("-1.00"))
+                                        .laborTotal(new BigDecimal("-1.00"))
                                         .discountAmount(BigDecimal.ZERO)
                                         .build()
                         )))
@@ -231,7 +238,7 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 OrderEstimateUpdateDTO.builder()
-                                        .costsTotal(new BigDecimal("100.00"))
+                                        .laborTotal(new BigDecimal("100.00"))
                                         .discountAmount(new BigDecimal("120.00"))
                                         .build()
                         )))
@@ -262,6 +269,8 @@ class OrderControllerTest {
                         .vehicleId(2)
                         .problem("Diagnostics")
                         .status(OrderStatus.IN_PROGRESS)
+                        .laborTotal(BigDecimal.ZERO)
+                        .partsTotal(BigDecimal.ZERO)
                         .costsTotal(BigDecimal.ZERO)
                         .discountAmount(BigDecimal.ZERO)
                         .finalAmount(BigDecimal.ZERO)

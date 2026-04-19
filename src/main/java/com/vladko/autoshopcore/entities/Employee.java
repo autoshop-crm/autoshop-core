@@ -33,7 +33,6 @@ public class Employee implements BaseEntity<Integer> {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
-    @Size(max = 20)
     @NotNull
     @Column(name = "function", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)

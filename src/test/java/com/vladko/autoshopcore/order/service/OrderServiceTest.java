@@ -19,6 +19,8 @@ import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
 import com.vladko.autoshopcore.order.repository.EmployeeRepository;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
+import com.vladko.autoshopcore.order.service.OrderFinancialsService;
+import com.vladko.autoshopcore.parts.service.OrderPartInventoryCoordinator;
 import com.vladko.autoshopcore.vehicle.entity.Vehicle;
 import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import com.vladko.autoshopcore.vehicle.repository.VehicleRepository;
@@ -53,6 +55,12 @@ class OrderServiceTest {
     @Mock
     private EmployeeRepository employeeRepository;
 
+    @Mock
+    private OrderFinancialsService orderFinancialsService;
+
+    @Mock
+    private OrderPartInventoryCoordinator orderPartInventoryCoordinator;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -71,6 +79,8 @@ class OrderServiceTest {
                 .vehicle(vehicle)
                 .problem("Engine diagnostics")
                 .status(OrderStatus.NEW)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -92,7 +102,7 @@ class OrderServiceTest {
         assertThat(orderToSave.getVehicle()).isEqualTo(vehicle);
         assertThat(orderToSave.getProblem()).isEqualTo("Engine diagnostics");
         assertThat(orderToSave.getStatus()).isEqualTo(OrderStatus.NEW);
-        assertThat(orderToSave.getCostsTotal()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(orderFinancialsService).initialize(orderToSave);
         assertThat(response.getId()).isEqualTo(10);
     }
 
@@ -190,6 +200,8 @@ class OrderServiceTest {
                 .employee(employee)
                 .problem("Diagnostics")
                 .status(OrderStatus.NEW)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -200,6 +212,8 @@ class OrderServiceTest {
                 .vehicle(vehicle)
                 .problem("Diagnostics")
                 .status(OrderStatus.IN_PROGRESS)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -225,6 +239,8 @@ class OrderServiceTest {
                 .employee(employee)
                 .problem("Diagnostics")
                 .status(OrderStatus.IN_PROGRESS)
+                .laborTotal(new BigDecimal("100.00"))
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(new BigDecimal("100.00"))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(new BigDecimal("100.00"))
@@ -236,6 +252,8 @@ class OrderServiceTest {
                 .employee(employee)
                 .problem("Diagnostics")
                 .status(OrderStatus.COMPLETED)
+                .laborTotal(new BigDecimal("100.00"))
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(new BigDecimal("100.00"))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(new BigDecimal("100.00"))
@@ -247,6 +265,7 @@ class OrderServiceTest {
 
         OrderResponseDTO response = orderService.updateStatus(7, new OrderStatusUpdateDTO(OrderStatus.COMPLETED));
 
+        verify(orderPartInventoryCoordinator).finalizeReservations(existingOrder);
         assertThat(existingOrder.getCompletedAt()).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OrderStatus.COMPLETED);
         assertThat(response.getCompletedAt()).isEqualTo(Instant.parse("2026-04-14T11:15:30Z"));
@@ -262,6 +281,8 @@ class OrderServiceTest {
                 .vehicle(vehicle)
                 .problem("Diagnostics")
                 .status(OrderStatus.NEW)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -272,6 +293,8 @@ class OrderServiceTest {
                 .vehicle(vehicle)
                 .problem("Diagnostics")
                 .status(OrderStatus.CANCELLED)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -283,6 +306,7 @@ class OrderServiceTest {
 
         OrderResponseDTO response = orderService.updateStatus(9, new OrderStatusUpdateDTO(OrderStatus.CANCELLED));
 
+        verify(orderPartInventoryCoordinator).releaseReservations(existingOrder);
         assertThat(response.getStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(response.getCompletedAt()).isNull();
     }
@@ -468,6 +492,8 @@ class OrderServiceTest {
                 .vehicle(vehicle)
                 .problem("Diagnostics")
                 .status(OrderStatus.NEW)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(BigDecimal.ZERO)
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.ZERO)
@@ -478,6 +504,8 @@ class OrderServiceTest {
                 .vehicle(vehicle)
                 .problem("Diagnostics")
                 .status(OrderStatus.NEW)
+                .laborTotal(new BigDecimal("100.00"))
+                .partsTotal(BigDecimal.ZERO)
                 .costsTotal(new BigDecimal("100.00"))
                 .discountAmount(new BigDecimal("15.00"))
                 .finalAmount(new BigDecimal("85.00"))
@@ -485,12 +513,23 @@ class OrderServiceTest {
 
         when(orderRepository.findById(19)).thenReturn(Optional.of(existingOrder));
         when(orderRepository.save(existingOrder)).thenReturn(updatedOrder);
+        doAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            order.setLaborTotal(new BigDecimal("100.00"));
+            order.setPartsTotal(BigDecimal.ZERO);
+            order.setCostsTotal(new BigDecimal("100.00"));
+            order.setDiscountAmount(new BigDecimal("15.00"));
+            order.setFinalAmount(new BigDecimal("85.00"));
+            return null;
+        }).when(orderFinancialsService).updateEstimate(existingOrder, new BigDecimal("100.00"), new BigDecimal("15.00"));
 
         OrderResponseDTO response = orderService.updateEstimate(19, new OrderEstimateUpdateDTO(
                 new BigDecimal("100.00"),
                 new BigDecimal("15.00")
         ));
 
+        verify(orderFinancialsService).updateEstimate(existingOrder, new BigDecimal("100.00"), new BigDecimal("15.00"));
+        assertThat(existingOrder.getLaborTotal()).isEqualByComparingTo("100.00");
         assertThat(existingOrder.getCostsTotal()).isEqualByComparingTo("100.00");
         assertThat(existingOrder.getDiscountAmount()).isEqualByComparingTo("15.00");
         assertThat(existingOrder.getFinalAmount()).isEqualByComparingTo("85.00");
@@ -510,6 +549,8 @@ class OrderServiceTest {
                 .build();
 
         when(orderRepository.findById(20)).thenReturn(Optional.of(existingOrder));
+        doThrow(new OrderConflictException("Estimate amounts cannot be negative"))
+                .when(orderFinancialsService).updateEstimate(existingOrder, new BigDecimal("-1.00"), BigDecimal.ZERO);
 
         assertThatThrownBy(() -> orderService.updateEstimate(20, new OrderEstimateUpdateDTO(
                 new BigDecimal("-1.00"),
@@ -532,6 +573,8 @@ class OrderServiceTest {
                 .build();
 
         when(orderRepository.findById(21)).thenReturn(Optional.of(existingOrder));
+        doThrow(new OrderConflictException("Discount amount cannot exceed total costs"))
+                .when(orderFinancialsService).updateEstimate(existingOrder, new BigDecimal("100.00"), new BigDecimal("120.00"));
 
         assertThatThrownBy(() -> orderService.updateEstimate(21, new OrderEstimateUpdateDTO(
                 new BigDecimal("100.00"),

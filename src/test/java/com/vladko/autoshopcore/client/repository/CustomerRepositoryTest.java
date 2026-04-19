@@ -1,6 +1,6 @@
 package com.vladko.autoshopcore.client.repository;
 
-import com.vladko.autoshopcore.TestcontainersConfiguration;
+import com.vladko.autoshopcore.PostgresTestcontainersConfiguration;
 import com.vladko.autoshopcore.client.entity.Customer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(TestcontainersConfiguration.class)
+@Import(PostgresTestcontainersConfiguration.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CustomerRepositoryTest {
 

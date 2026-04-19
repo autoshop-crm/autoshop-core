@@ -1,6 +1,6 @@
 package com.vladko.autoshopcore.vehicle.repository;
 
-import com.vladko.autoshopcore.TestcontainersConfiguration;
+import com.vladko.autoshopcore.PostgresTestcontainersConfiguration;
 import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.vehicle.entity.Vehicle;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(TestcontainersConfiguration.class)
+@Import(PostgresTestcontainersConfiguration.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class VehicleRepositoryTest {
 

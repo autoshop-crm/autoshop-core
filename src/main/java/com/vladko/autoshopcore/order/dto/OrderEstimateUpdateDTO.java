@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 public class OrderEstimateUpdateDTO {
     @NotNull
     @DecimalMin("0.00")
-    private BigDecimal costsTotal;
+    private BigDecimal laborTotal;
 
     @NotNull
     @DecimalMin("0.00")

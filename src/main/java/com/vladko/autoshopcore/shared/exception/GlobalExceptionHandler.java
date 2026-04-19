@@ -6,6 +6,10 @@ import com.vladko.autoshopcore.order.exception.EmployeeNotFoundException;
 import com.vladko.autoshopcore.order.exception.InvalidOrderStateException;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
+import com.vladko.autoshopcore.parts.exception.InsufficientPartStockException;
+import com.vladko.autoshopcore.parts.exception.OrderPartItemNotFoundException;
+import com.vladko.autoshopcore.parts.exception.PartConflictException;
+import com.vladko.autoshopcore.parts.exception.PartNotFoundException;
 import com.vladko.autoshopcore.vehicle.exception.VehicleConflictException;
 import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,6 +72,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidOrderStateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidOrderState(InvalidOrderStateException exception,
                                                                  HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(PartNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePartNotFound(PartNotFoundException exception,
+                                                            HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(OrderPartItemNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderPartItemNotFound(OrderPartItemNotFoundException exception,
+                                                                     HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler({PartConflictException.class, InsufficientPartStockException.class})
+    public ResponseEntity<ErrorResponse> handlePartConflict(RuntimeException exception,
+                                                            HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 

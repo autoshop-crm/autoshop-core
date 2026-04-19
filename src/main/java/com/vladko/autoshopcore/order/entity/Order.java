@@ -47,6 +47,16 @@ public class Order implements BaseEntity<Integer> {
 
     @Builder.Default
     @ColumnDefault("0")
+    @Column(name = "labor_total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal laborTotal = BigDecimal.ZERO;
+
+    @Builder.Default
+    @ColumnDefault("0")
+    @Column(name = "parts_total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal partsTotal = BigDecimal.ZERO;
+
+    @Builder.Default
+    @ColumnDefault("0")
     @Column(name = "costs_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal costsTotal = BigDecimal.ZERO;
 
@@ -81,6 +91,12 @@ public class Order implements BaseEntity<Integer> {
         }
         if (costsTotal == null) {
             costsTotal = BigDecimal.ZERO;
+        }
+        if (laborTotal == null) {
+            laborTotal = BigDecimal.ZERO;
+        }
+        if (partsTotal == null) {
+            partsTotal = BigDecimal.ZERO;
         }
         if (discountAmount == null) {
             discountAmount = BigDecimal.ZERO;

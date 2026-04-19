@@ -20,6 +20,8 @@ public class OrderResponseDTO {
     private Integer employeeId;
     private String problem;
     private OrderStatus status;
+    private BigDecimal laborTotal;
+    private BigDecimal partsTotal;
     private BigDecimal costsTotal;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;
