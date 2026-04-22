@@ -5,6 +5,7 @@ import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.entities.Employee;
 import com.vladko.autoshopcore.entities.EmployeeType;
+import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
 import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
@@ -41,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
     private final EmployeeRepository employeeRepository;
     private final OrderFinancialsService orderFinancialsService;
     private final OrderPartInventoryCoordinator orderPartInventoryCoordinator;
+    private final LoyaltyService loyaltyService;
 
     @Override
     @Transactional
@@ -59,6 +61,9 @@ public class OrderServiceImpl implements OrderService {
                 .status(OrderStatus.NEW)
                 .laborTotal(BigDecimal.ZERO)
                 .partsTotal(BigDecimal.ZERO)
+                .manualDiscountAmount(BigDecimal.ZERO)
+                .pointsDiscountAmount(BigDecimal.ZERO)
+                .loyaltyPointsSpent(0)
                 .build();
         orderFinancialsService.initialize(order);
 
@@ -103,6 +108,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = findOrder(id);
         ensureEstimateIsEditable(order);
         orderFinancialsService.updateEstimate(order, dto.getLaborTotal(), dto.getDiscountAmount());
+        loyaltyService.refreshAppliedPointsAfterOrderChange(order);
 
         return mapToResponse(orderRepository.save(order));
     }
@@ -122,8 +128,10 @@ public class OrderServiceImpl implements OrderService {
 
         if (targetStatus == OrderStatus.COMPLETED) {
             orderPartInventoryCoordinator.finalizeReservations(order);
+            loyaltyService.processOrderCompleted(order);
         } else if (targetStatus == OrderStatus.CANCELLED) {
             orderPartInventoryCoordinator.releaseReservations(order);
+            loyaltyService.processOrderCancelled(order);
         }
 
         order.setStatus(targetStatus);
@@ -256,6 +264,9 @@ public class OrderServiceImpl implements OrderService {
                 .laborTotal(order.getLaborTotal())
                 .partsTotal(order.getPartsTotal())
                 .costsTotal(order.getCostsTotal())
+                .manualDiscountAmount(order.getManualDiscountAmount())
+                .pointsDiscountAmount(order.getPointsDiscountAmount())
+                .loyaltyPointsSpent(order.getLoyaltyPointsSpent())
                 .discountAmount(order.getDiscountAmount())
                 .finalAmount(order.getFinalAmount())
                 .createdAt(order.getCreatedAt())

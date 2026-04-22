@@ -5,6 +5,7 @@ import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.entities.Employee;
 import com.vladko.autoshopcore.entities.EmployeeType;
+import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
 import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
@@ -60,6 +61,9 @@ class OrderServiceTest {
 
     @Mock
     private OrderPartInventoryCoordinator orderPartInventoryCoordinator;
+
+    @Mock
+    private LoyaltyService loyaltyService;
 
     @InjectMocks
     private OrderServiceImpl orderService;

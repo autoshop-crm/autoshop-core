@@ -3,6 +3,7 @@ package com.vladko.autoshopcore.vehicle.service;
 import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
+import com.vladko.autoshopcore.vehicle.dto.VehicleCatalogLinkDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleCreateDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleResponseDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleUpdateDTO;
@@ -167,5 +168,69 @@ class VehicleServiceTest {
         assertThat(existingVehicle.getModel()).isEqualTo("Superb");
         assertThat(existingVehicle.getLicensePlate()).isEqualTo("K700KT77");
         assertThat(response.getLicensePlate()).isEqualTo("K700KT77");
+    }
+
+    @Test
+    void linkCatalogShouldPersistUmapiModification() {
+        Customer customer = Customer.builder().id(7).build();
+        Vehicle vehicle = Vehicle.builder()
+                .id(12)
+                .customer(customer)
+                .brand("Toyota")
+                .model("Camry")
+                .vin("JT2BG22KXV0123456")
+                .licensePlate("A123BC77")
+                .build();
+        VehicleCatalogLinkDTO dto = VehicleCatalogLinkDTO.builder()
+                .type(" pc ")
+                .manufacturerId(111)
+                .manufacturerName(" TOYOTA ")
+                .modelSeriesId(222)
+                .modelSeriesName(" CAMRY ")
+                .modificationId(333)
+                .modificationName(" Camry 2.5 ")
+                .engineDescription(" 2.5, petrol ")
+                .build();
+
+        when(vehicleRepository.findById(12)).thenReturn(Optional.of(vehicle));
+        when(vehicleRepository.save(vehicle)).thenReturn(vehicle);
+
+        VehicleResponseDTO response = vehicleService.linkCatalog(12, dto);
+
+        assertThat(vehicle.getUmapiType()).isEqualTo("PC");
+        assertThat(vehicle.getUmapiManufacturerName()).isEqualTo("TOYOTA");
+        assertThat(vehicle.getUmapiModificationId()).isEqualTo(333);
+        assertThat(vehicle.getUmapiCatalogLinkedAt()).isNotNull();
+        assertThat(response.getUmapiModificationName()).isEqualTo("Camry 2.5");
+    }
+
+    @Test
+    void unlinkCatalogShouldClearUmapiModification() {
+        Customer customer = Customer.builder().id(7).build();
+        Vehicle vehicle = Vehicle.builder()
+                .id(12)
+                .customer(customer)
+                .brand("Toyota")
+                .model("Camry")
+                .vin("JT2BG22KXV0123456")
+                .licensePlate("A123BC77")
+                .umapiType("PC")
+                .umapiManufacturerId(111)
+                .umapiManufacturerName("TOYOTA")
+                .umapiModelSeriesId(222)
+                .umapiModelSeriesName("CAMRY")
+                .umapiModificationId(333)
+                .umapiModificationName("Camry 2.5")
+                .umapiCatalogLinkedAt(Instant.parse("2026-04-22T10:00:00Z"))
+                .build();
+
+        when(vehicleRepository.findById(12)).thenReturn(Optional.of(vehicle));
+        when(vehicleRepository.save(vehicle)).thenReturn(vehicle);
+
+        VehicleResponseDTO response = vehicleService.unlinkCatalog(12);
+
+        assertThat(vehicle.getUmapiModificationId()).isNull();
+        assertThat(vehicle.getUmapiCatalogLinkedAt()).isNull();
+        assertThat(response.getUmapiModificationId()).isNull();
     }
 }

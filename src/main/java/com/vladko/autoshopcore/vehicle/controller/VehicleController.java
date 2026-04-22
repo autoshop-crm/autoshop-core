@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.vehicle.controller;
 
+import com.vladko.autoshopcore.vehicle.dto.VehicleCatalogLinkDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleCreateDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleResponseDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleUpdateDTO;
@@ -43,6 +44,18 @@ public class VehicleController {
     public ResponseEntity<VehicleResponseDTO> update(@PathVariable Integer id,
                                                      @Valid @RequestBody VehicleUpdateDTO dto) {
         return ResponseEntity.ok(vehicleService.update(id, dto));
+    }
+
+    @PutMapping("/{id}/catalog-link")
+    public ResponseEntity<VehicleResponseDTO> linkCatalog(@PathVariable Integer id,
+                                                          @Valid @RequestBody VehicleCatalogLinkDTO dto) {
+        return ResponseEntity.ok(vehicleService.linkCatalog(id, dto));
+    }
+
+    @DeleteMapping("/{id}/catalog-link")
+    public ResponseEntity<Void> unlinkCatalog(@PathVariable Integer id) {
+        vehicleService.unlinkCatalog(id);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")

@@ -18,6 +18,15 @@ public class VehicleResponseDTO {
     private String model;
     private String vin;
     private String licensePlate;
+    private String umapiType;
+    private Integer umapiManufacturerId;
+    private String umapiManufacturerName;
+    private Integer umapiModelSeriesId;
+    private String umapiModelSeriesName;
+    private Integer umapiModificationId;
+    private String umapiModificationName;
+    private String umapiEngineDescription;
+    private Instant umapiCatalogLinkedAt;
     private Instant createdAt;
     private Instant updatedAt;
 }

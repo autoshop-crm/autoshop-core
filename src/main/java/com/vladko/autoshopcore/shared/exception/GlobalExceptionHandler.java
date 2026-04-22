@@ -2,6 +2,15 @@ package com.vladko.autoshopcore.shared.exception;
 
 import com.vladko.autoshopcore.client.exception.CustomerConflictException;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
+import com.vladko.autoshopcore.integration.shared.ExternalApiAuthenticationException;
+import com.vladko.autoshopcore.integration.shared.ExternalApiConfigurationException;
+import com.vladko.autoshopcore.integration.shared.ExternalApiContractException;
+import com.vladko.autoshopcore.integration.shared.ExternalApiUnavailableException;
+import com.vladko.autoshopcore.integration.shared.ExternalApiValidationException;
+import com.vladko.autoshopcore.loyalty.exception.InsufficientLoyaltyBalanceException;
+import com.vladko.autoshopcore.loyalty.exception.InvalidLoyaltyOperationException;
+import com.vladko.autoshopcore.loyalty.exception.LoyaltyAccountNotFoundException;
+import com.vladko.autoshopcore.loyalty.exception.LoyaltyTierNotFoundException;
 import com.vladko.autoshopcore.order.exception.EmployeeNotFoundException;
 import com.vladko.autoshopcore.order.exception.InvalidOrderStateException;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
@@ -93,6 +102,18 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 
+    @ExceptionHandler({LoyaltyAccountNotFoundException.class, LoyaltyTierNotFoundException.class})
+    public ResponseEntity<ErrorResponse> handleLoyaltyNotFound(RuntimeException exception,
+                                                               HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler({InvalidLoyaltyOperationException.class, InsufficientLoyaltyBalanceException.class})
+    public ResponseEntity<ErrorResponse> handleLoyaltyConflict(RuntimeException exception,
+                                                               HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException exception,
                                                                    HttpServletRequest request) {
@@ -115,6 +136,28 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception,
                                                                         HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ExternalApiConfigurationException.class)
+    public ResponseEntity<ErrorResponse> handleExternalApiConfiguration(ExternalApiConfigurationException exception,
+                                                                        HttpServletRequest request) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ExternalApiUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleExternalApiUnavailable(ExternalApiUnavailableException exception,
+                                                                      HttpServletRequest request) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler({
+            ExternalApiAuthenticationException.class,
+            ExternalApiValidationException.class,
+            ExternalApiContractException.class
+    })
+    public ResponseEntity<ErrorResponse> handleExternalApiBadGateway(RuntimeException exception,
+                                                                     HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_GATEWAY, exception.getMessage(), request);
     }
 
     private String formatFieldError(FieldError fieldError) {

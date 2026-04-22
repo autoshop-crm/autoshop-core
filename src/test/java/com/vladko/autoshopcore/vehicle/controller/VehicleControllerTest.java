@@ -20,8 +20,10 @@ import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -113,5 +115,45 @@ class VehicleControllerTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Vehicle with vin 'JT2BG22KXV0123456' already exists"));
+    }
+
+    @Test
+    void linkCatalogShouldReturnLinkedVehicle() throws Exception {
+        when(vehicleService.linkCatalog(any(), any())).thenReturn(VehicleResponseDTO.builder()
+                .id(15)
+                .customerId(1)
+                .brand("Toyota")
+                .model("Camry")
+                .vin("JT2BG22KXV0123456")
+                .licensePlate("A123BC77")
+                .umapiType("PC")
+                .umapiModificationId(333)
+                .umapiModificationName("Camry 2.5")
+                .umapiCatalogLinkedAt(Instant.parse("2026-04-22T10:00:00Z"))
+                .build());
+
+        mockMvc.perform(put("/api/vehicles/15/catalog-link")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "PC",
+                                  "manufacturerId": 111,
+                                  "manufacturerName": "TOYOTA",
+                                  "modelSeriesId": 222,
+                                  "modelSeriesName": "CAMRY",
+                                  "modificationId": 333,
+                                  "modificationName": "Camry 2.5",
+                                  "engineDescription": "2.5, petrol, 181 hp"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.umapiType").value("PC"))
+                .andExpect(jsonPath("$.umapiModificationId").value(333));
+    }
+
+    @Test
+    void unlinkCatalogShouldReturnNoContent() throws Exception {
+        mockMvc.perform(delete("/api/vehicles/15/catalog-link"))
+                .andExpect(status().isNoContent());
     }
 }

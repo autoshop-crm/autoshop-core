@@ -38,6 +38,33 @@ public class Vehicle implements BaseEntity<Integer> {
     @Column(name = "license_plate", unique = true, nullable = false, length = 12)
     private String licensePlate;
 
+    @Column(name = "umapi_type", length = 20)
+    private String umapiType;
+
+    @Column(name = "umapi_manufacturer_id")
+    private Integer umapiManufacturerId;
+
+    @Column(name = "umapi_manufacturer_name", length = 100)
+    private String umapiManufacturerName;
+
+    @Column(name = "umapi_model_series_id")
+    private Integer umapiModelSeriesId;
+
+    @Column(name = "umapi_model_series_name", length = 150)
+    private String umapiModelSeriesName;
+
+    @Column(name = "umapi_modification_id")
+    private Integer umapiModificationId;
+
+    @Column(name = "umapi_modification_name")
+    private String umapiModificationName;
+
+    @Column(name = "umapi_engine_description")
+    private String umapiEngineDescription;
+
+    @Column(name = "umapi_catalog_linked_at")
+    private Instant umapiCatalogLinkedAt;
+
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;

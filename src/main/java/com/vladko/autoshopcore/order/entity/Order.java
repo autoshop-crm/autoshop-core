@@ -18,7 +18,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
+@Entity(name = "CustomerOrder")
 @Table(name = "orders")
 public class Order implements BaseEntity<Integer> {
     @Id
@@ -62,6 +62,21 @@ public class Order implements BaseEntity<Integer> {
 
     @Builder.Default
     @ColumnDefault("0")
+    @Column(name = "manual_discount_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal manualDiscountAmount = BigDecimal.ZERO;
+
+    @Builder.Default
+    @ColumnDefault("0")
+    @Column(name = "points_discount_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal pointsDiscountAmount = BigDecimal.ZERO;
+
+    @Builder.Default
+    @ColumnDefault("0")
+    @Column(name = "loyalty_points_spent", nullable = false)
+    private Integer loyaltyPointsSpent = 0;
+
+    @Builder.Default
+    @ColumnDefault("0")
     @Column(name = "discount_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
@@ -97,6 +112,15 @@ public class Order implements BaseEntity<Integer> {
         }
         if (partsTotal == null) {
             partsTotal = BigDecimal.ZERO;
+        }
+        if (manualDiscountAmount == null) {
+            manualDiscountAmount = BigDecimal.ZERO;
+        }
+        if (pointsDiscountAmount == null) {
+            pointsDiscountAmount = BigDecimal.ZERO;
+        }
+        if (loyaltyPointsSpent == null) {
+            loyaltyPointsSpent = 0;
         }
         if (discountAmount == null) {
             discountAmount = BigDecimal.ZERO;

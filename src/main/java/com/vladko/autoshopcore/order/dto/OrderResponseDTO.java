@@ -23,6 +23,9 @@ public class OrderResponseDTO {
     private BigDecimal laborTotal;
     private BigDecimal partsTotal;
     private BigDecimal costsTotal;
+    private BigDecimal manualDiscountAmount;
+    private BigDecimal pointsDiscountAmount;
+    private Integer loyaltyPointsSpent;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;
     private Instant createdAt;

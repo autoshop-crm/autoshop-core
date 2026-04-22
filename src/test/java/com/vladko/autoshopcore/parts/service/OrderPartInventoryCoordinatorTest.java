@@ -5,6 +5,7 @@ import com.vladko.autoshopcore.order.entity.OrderStatus;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
 import com.vladko.autoshopcore.order.service.OrderFinancialsService;
+import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import com.vladko.autoshopcore.parts.dto.OrderPartItemCreateDTO;
 import com.vladko.autoshopcore.parts.dto.OrderPartItemResponseDTO;
 import com.vladko.autoshopcore.parts.dto.OrderPartItemUpdateDTO;
@@ -44,6 +45,9 @@ class OrderPartInventoryCoordinatorTest {
     @Mock
     private OrderFinancialsService orderFinancialsService;
 
+    @Mock
+    private LoyaltyService loyaltyService;
+
     @InjectMocks
     private OrderPartInventoryCoordinator coordinator;
 
@@ -68,7 +72,7 @@ class OrderPartInventoryCoordinatorTest {
             item.setId(77);
             return item;
         });
-        doNothing().when(orderFinancialsService).recalculate(order);
+        doNothing().when(orderFinancialsService).recalculateAfterMutableTotalsChange(order);
 
         OrderPartItemResponseDTO response = coordinator.create(10, new OrderPartItemCreateDTO(5, 3));
 
@@ -76,7 +80,8 @@ class OrderPartInventoryCoordinatorTest {
         assertThat(response.getId()).isEqualTo(77);
         assertThat(response.getUnitPrice()).isEqualByComparingTo("15.50");
         assertThat(response.getLineTotal()).isEqualByComparingTo("46.50");
-        verify(orderFinancialsService).recalculate(order);
+        verify(orderFinancialsService).recalculateAfterMutableTotalsChange(order);
+        verify(loyaltyService).refreshAppliedPointsAfterOrderChange(order);
     }
 
     @Test
@@ -141,7 +146,8 @@ class OrderPartInventoryCoordinatorTest {
         assertThat(part.getReservedQuantity()).isEqualTo(2);
         assertThat(item.getQuantity()).isEqualTo(1);
         assertThat(response.getLineTotal()).isEqualByComparingTo("15.50");
-        verify(orderFinancialsService).recalculate(order);
+        verify(orderFinancialsService).recalculateAfterMutableTotalsChange(order);
+        verify(loyaltyService).refreshAppliedPointsAfterOrderChange(order);
     }
 
     @Test
@@ -171,6 +177,7 @@ class OrderPartInventoryCoordinatorTest {
 
         assertThat(part.getReservedQuantity()).isEqualTo(1);
         verify(orderPartItemRepository).delete(item);
-        verify(orderFinancialsService).recalculate(order);
+        verify(orderFinancialsService).recalculateAfterMutableTotalsChange(order);
+        verify(loyaltyService).refreshAppliedPointsAfterOrderChange(order);
     }
 }

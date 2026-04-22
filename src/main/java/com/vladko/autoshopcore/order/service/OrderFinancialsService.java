@@ -20,6 +20,9 @@ public class OrderFinancialsService {
     public void initialize(Order order) {
         order.setLaborTotal(defaultIfNull(order.getLaborTotal()));
         order.setPartsTotal(defaultIfNull(order.getPartsTotal()));
+        order.setManualDiscountAmount(defaultIfNull(order.getManualDiscountAmount()));
+        order.setPointsDiscountAmount(defaultIfNull(order.getPointsDiscountAmount()));
+        order.setLoyaltyPointsSpent(defaultIfNull(order.getLoyaltyPointsSpent()));
         order.setDiscountAmount(defaultIfNull(order.getDiscountAmount()));
         recalculate(order);
     }
@@ -33,25 +36,43 @@ public class OrderFinancialsService {
         }
 
         order.setLaborTotal(laborTotal);
-        order.setDiscountAmount(discountAmount);
-        recalculate(order);
+        order.setManualDiscountAmount(discountAmount);
+        recalculateAfterMutableTotalsChange(order);
     }
 
     public void recalculate(Order order) {
+        recalculate(order, false);
+    }
+
+    public void recalculateAfterMutableTotalsChange(Order order) {
+        recalculate(order, true);
+    }
+
+    private void recalculate(Order order, boolean allowTemporaryLoyaltyOverflow) {
         BigDecimal partsTotal = calculatePartsTotal(order.getId());
         BigDecimal laborTotal = defaultIfNull(order.getLaborTotal());
-        BigDecimal discountAmount = defaultIfNull(order.getDiscountAmount());
+        BigDecimal manualDiscountAmount = defaultIfNull(order.getManualDiscountAmount());
+        BigDecimal pointsDiscountAmount = defaultIfNull(order.getPointsDiscountAmount());
+        Integer loyaltyPointsSpent = defaultIfNull(order.getLoyaltyPointsSpent());
+        BigDecimal discountAmount = manualDiscountAmount.add(pointsDiscountAmount);
         BigDecimal costsTotal = laborTotal.add(partsTotal);
 
-        if (discountAmount.compareTo(costsTotal) > 0) {
+        if (manualDiscountAmount.compareTo(costsTotal) > 0) {
+            throw new OrderConflictException("Manual discount amount cannot exceed total costs");
+        }
+
+        if (discountAmount.compareTo(costsTotal) > 0 && !allowTemporaryLoyaltyOverflow) {
             throw new OrderConflictException("Discount amount cannot exceed total costs");
         }
 
         order.setPartsTotal(partsTotal);
         order.setLaborTotal(laborTotal);
-        order.setDiscountAmount(discountAmount);
+        order.setManualDiscountAmount(manualDiscountAmount);
+        order.setPointsDiscountAmount(pointsDiscountAmount);
+        order.setLoyaltyPointsSpent(loyaltyPointsSpent);
         order.setCostsTotal(costsTotal);
-        order.setFinalAmount(costsTotal.subtract(discountAmount));
+        order.setDiscountAmount(discountAmount.min(costsTotal));
+        order.setFinalAmount(costsTotal.subtract(order.getDiscountAmount()));
     }
 
     private BigDecimal calculatePartsTotal(Integer orderId) {
@@ -67,5 +88,9 @@ public class OrderFinancialsService {
 
     private BigDecimal defaultIfNull(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private Integer defaultIfNull(Integer value) {
+        return value == null ? 0 : value;
     }
 }

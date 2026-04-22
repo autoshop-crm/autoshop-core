@@ -3,6 +3,7 @@ package com.vladko.autoshopcore.vehicle.service;
 import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
+import com.vladko.autoshopcore.vehicle.dto.VehicleCatalogLinkDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleCreateDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleResponseDTO;
 import com.vladko.autoshopcore.vehicle.dto.VehicleUpdateDTO;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
@@ -106,6 +108,40 @@ public class VehicleServiceImpl implements VehicleService {
         vehicleRepository.delete(findVehicle(id));
     }
 
+    @Override
+    @Transactional
+    public VehicleResponseDTO linkCatalog(Integer id, VehicleCatalogLinkDTO dto) {
+        Vehicle vehicle = findVehicle(id);
+        vehicle.setUmapiType(normalizeCatalogType(dto.getType()));
+        vehicle.setUmapiManufacturerId(dto.getManufacturerId());
+        vehicle.setUmapiManufacturerName(normalizeText(dto.getManufacturerName()));
+        vehicle.setUmapiModelSeriesId(dto.getModelSeriesId());
+        vehicle.setUmapiModelSeriesName(normalizeText(dto.getModelSeriesName()));
+        vehicle.setUmapiModificationId(dto.getModificationId());
+        vehicle.setUmapiModificationName(normalizeText(dto.getModificationName()));
+        vehicle.setUmapiEngineDescription(normalizeOptionalText(dto.getEngineDescription()));
+        vehicle.setUmapiCatalogLinkedAt(Instant.now());
+
+        return mapToResponse(vehicleRepository.save(vehicle));
+    }
+
+    @Override
+    @Transactional
+    public VehicleResponseDTO unlinkCatalog(Integer id) {
+        Vehicle vehicle = findVehicle(id);
+        vehicle.setUmapiType(null);
+        vehicle.setUmapiManufacturerId(null);
+        vehicle.setUmapiManufacturerName(null);
+        vehicle.setUmapiModelSeriesId(null);
+        vehicle.setUmapiModelSeriesName(null);
+        vehicle.setUmapiModificationId(null);
+        vehicle.setUmapiModificationName(null);
+        vehicle.setUmapiEngineDescription(null);
+        vehicle.setUmapiCatalogLinkedAt(null);
+
+        return mapToResponse(vehicleRepository.save(vehicle));
+    }
+
     private Customer findCustomer(Integer customerId) {
         return customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
@@ -142,6 +178,15 @@ public class VehicleServiceImpl implements VehicleService {
                 .model(vehicle.getModel())
                 .vin(vehicle.getVin())
                 .licensePlate(vehicle.getLicensePlate())
+                .umapiType(vehicle.getUmapiType())
+                .umapiManufacturerId(vehicle.getUmapiManufacturerId())
+                .umapiManufacturerName(vehicle.getUmapiManufacturerName())
+                .umapiModelSeriesId(vehicle.getUmapiModelSeriesId())
+                .umapiModelSeriesName(vehicle.getUmapiModelSeriesName())
+                .umapiModificationId(vehicle.getUmapiModificationId())
+                .umapiModificationName(vehicle.getUmapiModificationName())
+                .umapiEngineDescription(vehicle.getUmapiEngineDescription())
+                .umapiCatalogLinkedAt(vehicle.getUmapiCatalogLinkedAt())
                 .createdAt(vehicle.getCreatedAt())
                 .updatedAt(vehicle.getUpdatedAt())
                 .build();
@@ -171,6 +216,14 @@ public class VehicleServiceImpl implements VehicleService {
             throw new IllegalArgumentException("Value must not be blank");
         }
         return normalizedValue;
+    }
+
+    private String normalizeCatalogType(String type) {
+        String normalizedType = normalizeText(type).toUpperCase(Locale.ROOT);
+        if (!"PC".equals(normalizedType)) {
+            throw new IllegalArgumentException("Catalog vehicle type is not supported");
+        }
+        return normalizedType;
     }
 
     private String normalizeOptionalText(String value) {

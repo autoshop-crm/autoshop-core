@@ -7,6 +7,7 @@ import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
 import com.vladko.autoshopcore.order.service.OrderFinancialsService;
+import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import com.vladko.autoshopcore.parts.dto.OrderPartItemCreateDTO;
 import com.vladko.autoshopcore.parts.dto.OrderPartItemResponseDTO;
 import com.vladko.autoshopcore.parts.dto.OrderPartItemUpdateDTO;
@@ -32,6 +33,7 @@ public class OrderPartInventoryCoordinator {
     private final PartRepository partRepository;
     private final OrderPartItemRepository orderPartItemRepository;
     private final OrderFinancialsService orderFinancialsService;
+    private final LoyaltyService loyaltyService;
 
     @Transactional
     public OrderPartItemResponseDTO create(Integer orderId, OrderPartItemCreateDTO dto) {
@@ -56,7 +58,8 @@ public class OrderPartInventoryCoordinator {
         partRepository.save(part);
         orderPartItemRepository.flush();
 
-        orderFinancialsService.recalculate(order);
+        orderFinancialsService.recalculateAfterMutableTotalsChange(order);
+        loyaltyService.refreshAppliedPointsAfterOrderChange(order);
         orderRepository.save(order);
 
         return mapToResponse(savedItem);
@@ -88,7 +91,8 @@ public class OrderPartInventoryCoordinator {
         orderPartItemRepository.save(item);
         orderPartItemRepository.flush();
 
-        orderFinancialsService.recalculate(order);
+        orderFinancialsService.recalculateAfterMutableTotalsChange(order);
+        loyaltyService.refreshAppliedPointsAfterOrderChange(order);
         orderRepository.save(order);
 
         return mapToResponse(item);
@@ -109,7 +113,8 @@ public class OrderPartInventoryCoordinator {
         orderPartItemRepository.flush();
         partRepository.save(part);
 
-        orderFinancialsService.recalculate(order);
+        orderFinancialsService.recalculateAfterMutableTotalsChange(order);
+        loyaltyService.refreshAppliedPointsAfterOrderChange(order);
         orderRepository.save(order);
     }
 
