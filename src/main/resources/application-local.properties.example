@@ -17,6 +17,13 @@ app.minio.secret-key=minioadmin
 spring.mail.host=localhost
 spring.mail.port=1025
 
+# AuthService integration
+app.auth.base-url=http://localhost:8082
+app.auth.validate-path=/api/auth/validate
+app.auth.connect-timeout=1s
+app.auth.read-timeout=2s
+app.auth.enabled=true
+
 # External API credentials
 # Keep real keys only in src/main/resources/application-local.properties or env vars.
 app.umapi.api-key=
