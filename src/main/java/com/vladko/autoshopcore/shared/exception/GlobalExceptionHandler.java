@@ -17,6 +17,7 @@ import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
 import com.vladko.autoshopcore.parts.exception.InsufficientPartStockException;
 import com.vladko.autoshopcore.parts.exception.OrderPartItemNotFoundException;
+import com.vladko.autoshopcore.parts.exception.OrderRequestedPartNotFoundException;
 import com.vladko.autoshopcore.parts.exception.PartConflictException;
 import com.vladko.autoshopcore.parts.exception.PartNotFoundException;
 import com.vladko.autoshopcore.vehicle.exception.VehicleConflictException;
@@ -87,6 +88,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PartNotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePartNotFound(PartNotFoundException exception,
                                                             HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+
+    @ExceptionHandler(OrderRequestedPartNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderRequestedPartNotFound(OrderRequestedPartNotFoundException exception,
+                                                                          HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
     }
 

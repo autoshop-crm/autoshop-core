@@ -65,7 +65,12 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/procurement/supplier-quotes/search").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
 
                         .requestMatchers(HttpMethod.GET, "/api/orders/*/parts", "/api/orders/*/parts/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/*/requested-parts", "/api/orders/*/requested-parts/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
                         .requestMatchers(HttpMethod.POST, "/api/orders/*/parts", "/api/orders/*/parts/**").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts/*/quotes").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts/*/order").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts/*/receive").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/parts/**").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
                         .requestMatchers(HttpMethod.DELETE, "/api/orders/*/parts/**").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/loyalty/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")

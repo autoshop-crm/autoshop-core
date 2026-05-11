@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/db.changelog-1.4-loyalty-module.sql
   - include:
       file: db/changelog/db.changelog-1.5-vehicle-umapi-catalog.sql
+  - include:
+      file: db/changelog/db.changelog-1.7-order-requested-parts.sql

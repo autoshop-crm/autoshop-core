@@ -3,7 +3,10 @@ package com.vladko.autoshopcore.order.service;
 import com.vladko.autoshopcore.order.entity.Order;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.parts.entity.OrderPartItem;
+import com.vladko.autoshopcore.parts.entity.OrderRequestedPart;
+import com.vladko.autoshopcore.parts.entity.OrderRequestedPartStatus;
 import com.vladko.autoshopcore.parts.repository.OrderPartItemRepository;
+import com.vladko.autoshopcore.parts.repository.OrderRequestedPartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,7 @@ import java.util.Objects;
 public class OrderFinancialsService {
 
     private final OrderPartItemRepository orderPartItemRepository;
+    private final OrderRequestedPartRepository orderRequestedPartRepository;
 
     public void initialize(Order order) {
         order.setLaborTotal(defaultIfNull(order.getLaborTotal()));
@@ -81,9 +85,17 @@ public class OrderFinancialsService {
         }
 
         List<OrderPartItem> items = orderPartItemRepository.findAllByOrderIdOrderByIdAsc(orderId);
-        return items.stream()
+        BigDecimal localTotal = items.stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal requestedTotal = orderRequestedPartRepository.findAllByOrderIdOrderByIdAsc(orderId).stream()
+                .filter(item -> item.getStatus() != OrderRequestedPartStatus.OUT_OF_STOCK)
+                .filter(item -> item.getSalePrice() != null)
+                .map(item -> item.getSalePrice().multiply(BigDecimal.valueOf(item.getRequestedQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return localTotal.add(requestedTotal);
     }
 
     private BigDecimal defaultIfNull(BigDecimal value) {
