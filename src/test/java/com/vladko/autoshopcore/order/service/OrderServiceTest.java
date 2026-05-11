@@ -5,6 +5,10 @@ import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.entities.Employee;
 import com.vladko.autoshopcore.entities.EmployeeType;
+import com.vladko.autoshopcore.event.notification.OrderCompletedNotificationPayload;
+import com.vladko.autoshopcore.event.notification.OrderCreatedNotificationPayload;
+import com.vladko.autoshopcore.event.notification.OrderNotificationPayloadFactory;
+import com.vladko.autoshopcore.event.notification.OrderStatusChangedNotificationPayload;
 import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
@@ -14,19 +18,22 @@ import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderUpdateDTO;
 import com.vladko.autoshopcore.order.entity.Order;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
+import com.vladko.autoshopcore.order.event.OrderCompletedDomainEvent;
+import com.vladko.autoshopcore.order.event.OrderCreatedDomainEvent;
+import com.vladko.autoshopcore.order.event.OrderStatusChangedDomainEvent;
 import com.vladko.autoshopcore.order.exception.EmployeeNotFoundException;
 import com.vladko.autoshopcore.order.exception.InvalidOrderStateException;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
 import com.vladko.autoshopcore.order.repository.EmployeeRepository;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
-import com.vladko.autoshopcore.order.service.OrderFinancialsService;
 import com.vladko.autoshopcore.parts.service.OrderPartInventoryCoordinator;
 import com.vladko.autoshopcore.vehicle.entity.Vehicle;
 import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import com.vladko.autoshopcore.vehicle.repository.VehicleRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -65,6 +72,12 @@ class OrderServiceTest {
     @Mock
     private LoyaltyService loyaltyService;
 
+    @Mock
+    private OrderNotificationPayloadFactory orderNotificationPayloadFactory;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -95,6 +108,8 @@ class OrderServiceTest {
         when(customerRepository.findById(1)).thenReturn(Optional.of(customer));
         when(vehicleRepository.findById(2)).thenReturn(Optional.of(vehicle));
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+        OrderCreatedNotificationPayload payload = createdPayload();
+        when(orderNotificationPayloadFactory.orderCreated(savedOrder)).thenReturn(payload);
 
         OrderResponseDTO response = orderService.create(dto);
 
@@ -107,6 +122,9 @@ class OrderServiceTest {
         assertThat(orderToSave.getProblem()).isEqualTo("Engine diagnostics");
         assertThat(orderToSave.getStatus()).isEqualTo(OrderStatus.NEW);
         verify(orderFinancialsService).initialize(orderToSave);
+        ArgumentCaptor<OrderCreatedDomainEvent> eventCaptor = ArgumentCaptor.forClass(OrderCreatedDomainEvent.class);
+        verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().payload()).isEqualTo(payload);
         assertThat(response.getId()).isEqualTo(10);
     }
 
@@ -225,10 +243,17 @@ class OrderServiceTest {
 
         when(orderRepository.findById(5)).thenReturn(Optional.of(existingOrder));
         when(orderRepository.save(existingOrder)).thenReturn(updatedOrder);
+        OrderStatusChangedNotificationPayload payload = statusChangedPayload(OrderStatus.NEW, OrderStatus.IN_PROGRESS);
+        when(orderNotificationPayloadFactory.orderStatusChanged(updatedOrder, OrderStatus.NEW, OrderStatus.IN_PROGRESS, ""))
+                .thenReturn(payload);
 
         OrderResponseDTO response = orderService.updateStatus(5, new OrderStatusUpdateDTO(OrderStatus.IN_PROGRESS));
 
         assertThat(response.getStatus()).isEqualTo(OrderStatus.IN_PROGRESS);
+        ArgumentCaptor<OrderStatusChangedDomainEvent> eventCaptor =
+                ArgumentCaptor.forClass(OrderStatusChangedDomainEvent.class);
+        verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().payload()).isEqualTo(payload);
     }
 
     @Test
@@ -266,13 +291,49 @@ class OrderServiceTest {
 
         when(orderRepository.findById(7)).thenReturn(Optional.of(existingOrder));
         when(orderRepository.save(existingOrder)).thenReturn(completedOrder);
+        when(loyaltyService.processOrderCompleted(existingOrder)).thenReturn(5);
+        OrderStatusChangedNotificationPayload statusPayload =
+                statusChangedPayload(OrderStatus.IN_PROGRESS, OrderStatus.COMPLETED);
+        OrderCompletedNotificationPayload completedPayload = completedPayload();
+        when(orderNotificationPayloadFactory.orderStatusChanged(completedOrder, OrderStatus.IN_PROGRESS, OrderStatus.COMPLETED, ""))
+                .thenReturn(statusPayload);
+        when(orderNotificationPayloadFactory.orderCompleted(completedOrder, 5)).thenReturn(completedPayload);
 
         OrderResponseDTO response = orderService.updateStatus(7, new OrderStatusUpdateDTO(OrderStatus.COMPLETED));
 
         verify(orderPartInventoryCoordinator).finalizeReservations(existingOrder);
+        verify(loyaltyService).processOrderCompleted(existingOrder);
         assertThat(existingOrder.getCompletedAt()).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OrderStatus.COMPLETED);
         assertThat(response.getCompletedAt()).isEqualTo(Instant.parse("2026-04-14T11:15:30Z"));
+        verify(applicationEventPublisher).publishEvent(new OrderStatusChangedDomainEvent(statusPayload));
+        verify(applicationEventPublisher).publishEvent(new OrderCompletedDomainEvent(completedPayload));
+    }
+
+    @Test
+    void updateStatusShouldSkipEventsWhenStatusDoesNotChange() {
+        Customer customer = Customer.builder().id(1).build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
+        Order existingOrder = Order.builder()
+                .id(8)
+                .customer(customer)
+                .vehicle(vehicle)
+                .problem("Diagnostics")
+                .status(OrderStatus.NEW)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
+                .costsTotal(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .finalAmount(BigDecimal.ZERO)
+                .build();
+
+        when(orderRepository.findById(8)).thenReturn(Optional.of(existingOrder));
+
+        OrderResponseDTO response = orderService.updateStatus(8, new OrderStatusUpdateDTO(OrderStatus.NEW));
+
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.NEW);
+        verify(orderRepository, never()).save(any(Order.class));
+        verifyNoInteractions(orderNotificationPayloadFactory, applicationEventPublisher);
     }
 
     @Test
@@ -332,6 +393,7 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.updateStatus(12, new OrderStatusUpdateDTO(OrderStatus.COMPLETED)))
                 .isInstanceOf(InvalidOrderStateException.class)
                 .hasMessage("Cannot transition order status from 'NEW' to 'COMPLETED'");
+        verifyNoInteractions(orderNotificationPayloadFactory, applicationEventPublisher);
     }
 
     @Test
@@ -656,5 +718,52 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.updateStatus(24, new OrderStatusUpdateDTO(OrderStatus.COMPLETED)))
                 .isInstanceOf(InvalidOrderStateException.class)
                 .hasMessage("Order estimate must be calculated before moving to COMPLETED");
+        verifyNoInteractions(orderNotificationPayloadFactory, applicationEventPublisher);
+    }
+
+    private OrderCreatedNotificationPayload createdPayload() {
+        return new OrderCreatedNotificationPayload(
+                10L,
+                "AS-2026-00010",
+                1L,
+                "Ivan",
+                "Petrov",
+                "ivan@example.com",
+                2L,
+                "Toyota",
+                "Camry",
+                "A123BC77",
+                Instant.parse("2026-04-14T10:15:30Z")
+        );
+    }
+
+    private OrderStatusChangedNotificationPayload statusChangedPayload(OrderStatus previousStatus, OrderStatus newStatus) {
+        return new OrderStatusChangedNotificationPayload(
+                5L,
+                "AS-2026-00005",
+                1L,
+                "Ivan",
+                "Petrov",
+                "ivan@example.com",
+                previousStatus.name(),
+                newStatus.name(),
+                Instant.parse("2026-04-14T11:15:30Z"),
+                ""
+        );
+    }
+
+    private OrderCompletedNotificationPayload completedPayload() {
+        return new OrderCompletedNotificationPayload(
+                7L,
+                "AS-2026-00007",
+                1L,
+                "Ivan",
+                "Petrov",
+                "ivan@example.com",
+                Instant.parse("2026-04-14T11:15:30Z"),
+                new BigDecimal("100.00"),
+                "RUB",
+                5
+        );
     }
 }

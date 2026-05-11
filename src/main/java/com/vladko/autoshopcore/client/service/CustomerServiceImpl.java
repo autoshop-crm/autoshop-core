@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -18,6 +19,10 @@ import java.util.Locale;
 @Service
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
+
+    private static final int SEARCH_LIMIT = 10;
+    private static final int MIN_EMAIL_QUERY_LENGTH = 5;
+    private static final int MIN_PHONE_DIGITS = 4;
 
     private final CustomerRepository customerRepository;
 
@@ -81,6 +86,41 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void delete(Integer id) {
         customerRepository.delete(findCustomer(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerResponseDTO> search(String query) {
+        String normalizedQuery = normalizeOptionalText(query);
+        if (normalizedQuery == null) {
+            return Collections.emptyList();
+        }
+
+        if (looksLikeEmailQuery(normalizedQuery)) {
+            String normalizedEmailQuery = normalizedQuery.toLowerCase(Locale.ROOT);
+            if (normalizedEmailQuery.length() < MIN_EMAIL_QUERY_LENGTH) {
+                return Collections.emptyList();
+            }
+
+            return customerRepository.searchByEmailPrefix(normalizedEmailQuery, SEARCH_LIMIT)
+                    .stream()
+                    .map(this::mapToResponse)
+                    .toList();
+        }
+
+        if (!looksLikePhoneQuery(normalizedQuery)) {
+            return Collections.emptyList();
+        }
+
+        String normalizedPhoneDigits = extractPhoneDigits(normalizedQuery);
+        if (normalizedPhoneDigits.length() < MIN_PHONE_DIGITS) {
+            return Collections.emptyList();
+        }
+
+        return customerRepository.searchByPhoneDigitsPrefix(normalizedPhoneDigits, SEARCH_LIMIT)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
@@ -170,6 +210,18 @@ public class CustomerServiceImpl implements CustomerService {
 
     private String normalizeOptionalPhoneNumber(String phoneNumber) {
         return normalizeOptionalText(phoneNumber);
+    }
+
+    private boolean looksLikeEmailQuery(String query) {
+        return query.contains("@");
+    }
+
+    private boolean looksLikePhoneQuery(String query) {
+        return query.matches("^[\\d\\s()+-]+$");
+    }
+
+    private String extractPhoneDigits(String query) {
+        return query.replaceAll("\\D", "");
     }
 
     private String normalizeText(String value) {

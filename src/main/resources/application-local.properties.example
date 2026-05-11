@@ -9,6 +9,13 @@ spring.data.redis.host=localhost
 spring.data.redis.port=6379
 
 spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+
+app.kafka.order-events-topic=autoshop.order-events
+app.events.source=autoshop-core
+app.events.version=1
+app.events.order-notifications-enabled=true
 
 app.minio.url=http://localhost:9000
 app.minio.access-key=minioadmin

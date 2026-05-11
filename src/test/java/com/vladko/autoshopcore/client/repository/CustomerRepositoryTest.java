@@ -54,4 +54,55 @@ class CustomerRepositoryTest {
                 .extracting(Customer::getEmail)
                 .containsExactlyInAnyOrder("ivan.petrov@example.com", "ivan.sidorov@example.com");
     }
+
+    @Test
+    void searchByEmailPrefixShouldReturnLimitedRelevantCustomers() {
+        customerRepository.save(Customer.builder()
+                .firstName("Ivan")
+                .lastName("Petrov")
+                .email("ivan@example.com")
+                .phoneNumber("+79990000001")
+                .build());
+        customerRepository.save(Customer.builder()
+                .firstName("Ivanna")
+                .lastName("Sidorova")
+                .email("ivanna@example.com")
+                .phoneNumber("+79990000002")
+                .build());
+        customerRepository.save(Customer.builder()
+                .firstName("Petr")
+                .lastName("Ivanov")
+                .email("petr@example.com")
+                .phoneNumber("+79990000003")
+                .build());
+
+        List<Customer> customers = customerRepository.searchByEmailPrefix("ivan", 10);
+
+        assertThat(customers)
+                .extracting(Customer::getEmail)
+                .containsExactly("ivanna@example.com", "ivan@example.com");
+    }
+
+    @Test
+    void searchByPhoneDigitsPrefixShouldIgnoreFormatting() {
+        customerRepository.save(Customer.builder()
+                .firstName("Maria")
+                .lastName("Ivanova")
+                .email("maria@example.com")
+                .phoneNumber("+79991112233")
+                .build());
+        customerRepository.save(Customer.builder()
+                .firstName("Anna")
+                .lastName("Petrova")
+                .email("anna@example.com")
+                .phoneNumber("89994445566")
+                .build());
+
+        List<Customer> customers = customerRepository.searchByPhoneDigitsPrefix("7999", 10);
+
+        assertThat(customers)
+                .hasSize(1)
+                .extracting(Customer::getEmail)
+                .containsExactly("maria@example.com");
+    }
 }

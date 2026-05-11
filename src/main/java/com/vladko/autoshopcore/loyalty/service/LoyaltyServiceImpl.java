@@ -150,13 +150,13 @@ public class LoyaltyServiceImpl implements LoyaltyService {
 
     @Override
     @Transactional
-    public void processOrderCompleted(Order order) {
+    public Integer processOrderCompleted(Order order) {
         if (transactionRepository.existsByOrderIdAndOperationTypeAndReason(
                 order.getId(),
                 OperationType.EARN,
                 LoyaltyTransactionReason.ORDER_COMPLETED
         )) {
-            return;
+            return 0;
         }
 
         LoyaltyAccount account = getOrCreateAccountForUpdate(order.getCustomer().getId());
@@ -174,6 +174,7 @@ public class LoyaltyServiceImpl implements LoyaltyService {
 
         createTransaction(account, order, OperationType.EARN, LoyaltyTransactionReason.ORDER_COMPLETED, earnedPoints);
         accountRepository.save(account);
+        return earnedPoints;
     }
 
     @Override

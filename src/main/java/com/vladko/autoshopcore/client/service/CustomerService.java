@@ -16,5 +16,7 @@ public interface CustomerService {
 
     void delete(Integer id);
 
+    List<CustomerResponseDTO> search(String query);
+
     List<CustomerResponseDTO> search(String email, String phoneNumber, String firstName, String lastName);
 }

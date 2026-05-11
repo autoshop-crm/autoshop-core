@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -133,5 +134,56 @@ class CustomerServiceTest {
         assertThat(existingCustomer.getLastName()).isEqualTo("Smirnova");
         assertThat(existingCustomer.getEmail()).isEqualTo("anna@example.com");
         assertThat(response.getLastName()).isEqualTo("Smirnova");
+    }
+
+    @Test
+    void searchByQueryShouldReturnEmptyListForInvalidPlainText() {
+        assertThat(customerService.search("vlad")).isEmpty();
+
+        verifyNoInteractions(customerRepository);
+    }
+
+    @Test
+    void searchByQueryShouldUseEmailPrefixSearch() {
+        Customer customer = Customer.builder()
+                .id(11)
+                .firstName("Vladislav")
+                .lastName("Kovrigin")
+                .email("vlad@example.com")
+                .phoneNumber("+79991234567")
+                .createdAt(Instant.parse("2026-04-12T10:15:30Z"))
+                .updatedAt(Instant.parse("2026-04-12T10:15:30Z"))
+                .build();
+
+        when(customerRepository.searchByEmailPrefix("vlad@ma", 10)).thenReturn(List.of(customer));
+
+        List<CustomerResponseDTO> response = customerService.search("Vlad@Ma");
+
+        assertThat(response)
+                .hasSize(1)
+                .extracting(CustomerResponseDTO::getEmail)
+                .containsExactly("vlad@example.com");
+    }
+
+    @Test
+    void searchByQueryShouldUsePhonePrefixSearch() {
+        Customer customer = Customer.builder()
+                .id(12)
+                .firstName("Ivan")
+                .lastName("Petrov")
+                .email("ivan@example.com")
+                .phoneNumber("+7 (999) 123-45-67")
+                .createdAt(Instant.parse("2026-04-12T10:15:30Z"))
+                .updatedAt(Instant.parse("2026-04-12T10:15:30Z"))
+                .build();
+
+        when(customerRepository.searchByPhoneDigitsPrefix("7999", 10)).thenReturn(List.of(customer));
+
+        List<CustomerResponseDTO> response = customerService.search("+7 (999)");
+
+        assertThat(response)
+                .hasSize(1)
+                .extracting(CustomerResponseDTO::getPhoneNumber)
+                .containsExactly("+7 (999) 123-45-67");
     }
 }

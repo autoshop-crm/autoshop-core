@@ -21,7 +21,7 @@ public interface LoyaltyService {
 
     void refreshAppliedPointsAfterOrderChange(Order order);
 
-    void processOrderCompleted(Order order);
+    Integer processOrderCompleted(Order order);
 
     void processOrderCancelled(Order order);
 }

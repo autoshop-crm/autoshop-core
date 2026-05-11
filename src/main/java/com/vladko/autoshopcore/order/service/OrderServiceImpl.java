@@ -5,6 +5,10 @@ import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.entities.Employee;
 import com.vladko.autoshopcore.entities.EmployeeType;
+import com.vladko.autoshopcore.event.notification.OrderCompletedNotificationPayload;
+import com.vladko.autoshopcore.event.notification.OrderCreatedNotificationPayload;
+import com.vladko.autoshopcore.event.notification.OrderNotificationPayloadFactory;
+import com.vladko.autoshopcore.event.notification.OrderStatusChangedNotificationPayload;
 import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
@@ -14,6 +18,9 @@ import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderUpdateDTO;
 import com.vladko.autoshopcore.order.entity.Order;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
+import com.vladko.autoshopcore.order.event.OrderCompletedDomainEvent;
+import com.vladko.autoshopcore.order.event.OrderCreatedDomainEvent;
+import com.vladko.autoshopcore.order.event.OrderStatusChangedDomainEvent;
 import com.vladko.autoshopcore.order.exception.EmployeeNotFoundException;
 import com.vladko.autoshopcore.order.exception.InvalidOrderStateException;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
@@ -25,6 +32,7 @@ import com.vladko.autoshopcore.vehicle.entity.Vehicle;
 import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import com.vladko.autoshopcore.vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +51,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderFinancialsService orderFinancialsService;
     private final OrderPartInventoryCoordinator orderPartInventoryCoordinator;
     private final LoyaltyService loyaltyService;
+    private final OrderNotificationPayloadFactory orderNotificationPayloadFactory;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -67,7 +77,11 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         orderFinancialsService.initialize(order);
 
-        return mapToResponse(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        OrderCreatedNotificationPayload payload = orderNotificationPayloadFactory.orderCreated(savedOrder);
+        applicationEventPublisher.publishEvent(new OrderCreatedDomainEvent(payload));
+
+        return mapToResponse(savedOrder);
     }
 
     @Override
@@ -117,18 +131,20 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDTO updateStatus(Integer id, OrderStatusUpdateDTO dto) {
         Order order = findOrder(id);
+        OrderStatus previousStatus = order.getStatus();
         OrderStatus targetStatus = dto.getStatus();
 
-        if (order.getStatus() == targetStatus) {
+        if (previousStatus == targetStatus) {
             return mapToResponse(order);
         }
 
-        validateStatusTransition(order.getStatus(), targetStatus);
+        validateStatusTransition(previousStatus, targetStatus);
         validateStatusGuards(order, targetStatus);
 
+        Integer loyaltyPointsEarned = 0;
         if (targetStatus == OrderStatus.COMPLETED) {
             orderPartInventoryCoordinator.finalizeReservations(order);
-            loyaltyService.processOrderCompleted(order);
+            loyaltyPointsEarned = loyaltyService.processOrderCompleted(order);
         } else if (targetStatus == OrderStatus.CANCELLED) {
             orderPartInventoryCoordinator.releaseReservations(order);
             loyaltyService.processOrderCancelled(order);
@@ -141,7 +157,24 @@ public class OrderServiceImpl implements OrderService {
             order.setCompletedAt(null);
         }
 
-        return mapToResponse(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        OrderStatusChangedNotificationPayload statusChangedPayload = orderNotificationPayloadFactory.orderStatusChanged(
+                savedOrder,
+                previousStatus,
+                targetStatus,
+                ""
+        );
+        applicationEventPublisher.publishEvent(new OrderStatusChangedDomainEvent(statusChangedPayload));
+
+        if (targetStatus == OrderStatus.COMPLETED) {
+            OrderCompletedNotificationPayload completedPayload = orderNotificationPayloadFactory.orderCompleted(
+                    savedOrder,
+                    loyaltyPointsEarned
+            );
+            applicationEventPublisher.publishEvent(new OrderCompletedDomainEvent(completedPayload));
+        }
+
+        return mapToResponse(savedOrder);
     }
 
     @Override

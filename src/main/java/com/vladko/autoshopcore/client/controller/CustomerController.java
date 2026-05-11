@@ -42,10 +42,15 @@ public class CustomerController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<CustomerResponseDTO>> search(@RequestParam(required = false) String email,
+    public ResponseEntity<List<CustomerResponseDTO>> search(@RequestParam(required = false) String query,
+                                                            @RequestParam(required = false) String email,
                                                             @RequestParam(required = false) String phoneNumber,
                                                             @RequestParam(required = false) String firstName,
                                                             @RequestParam(required = false) String lastName) {
+        if (query != null && !query.isBlank()) {
+            return ResponseEntity.ok(customerService.search(query));
+        }
+
         return ResponseEntity.ok(customerService.search(email, phoneNumber, firstName, lastName));
     }
 }
