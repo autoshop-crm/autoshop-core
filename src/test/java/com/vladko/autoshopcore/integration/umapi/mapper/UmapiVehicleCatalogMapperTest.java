@@ -14,7 +14,7 @@ class UmapiVehicleCatalogMapperTest {
         UmapiPassengerModificationResponse item = new UmapiPassengerModificationResponse();
         item.setModificationId(333);
         item.setName("Camry 2.5");
-        item.setPowerPs(181);
+        item.setPowerPs(new java.math.BigDecimal("181.0000"));
         item.setFuelType("Petrol");
 
         var dto = mapper.mapModification("PC", 222, item);

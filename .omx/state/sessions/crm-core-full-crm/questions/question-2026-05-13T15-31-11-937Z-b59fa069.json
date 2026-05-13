@@ -1,0 +1,52 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-13T15-31-11-937Z-b59fa069",
+  "session_id": "crm-core-full-crm",
+  "created_at": "2026-05-13T15:31:11.937Z",
+  "updated_at": "2026-05-13T15:31:11.959Z",
+  "status": "prompting",
+  "header": "Round 7",
+  "question": "Round 7 | Target: success criteria completion | Ambiguity: 16%\n\nБазовый happy-path уже понятен. Теперь выбери, какие ещё сценарии ОБЯЗАТЕЛЬНО должны входить в первый CRM-релиз как проверяемые end-to-end кейсы. Можно выбрать несколько.",
+  "options": [
+    {
+      "label": "Клиент не приехал",
+      "value": "no_show",
+      "description": "Запись сгорает, заказ отменяется/закрывается, клиент и сотрудники видят итоговый статус."
+    },
+    {
+      "label": "Клиент отказался от доп. работ",
+      "value": "declined_extra_work",
+      "description": "Механик предложил работы, клиент отклонил, заказ продолжается/закрывается без них."
+    },
+    {
+      "label": "Нужна новая запчасть не со склада",
+      "value": "part_procurement",
+      "description": "Запчасть требует одобрения клиента, затем менеджер оформляет закупку, заказ ждёт деталь."
+    },
+    {
+      "label": "Очная запись через ресепшен",
+      "value": "walkin_or_frontdesk_booking",
+      "description": "Не клиент сам, а сотрудник создаёт заказ/запись на будущую дату или на текущий приём."
+    },
+    {
+      "label": "Плановое ТО без согласований",
+      "value": "simple_maintenance",
+      "description": "Стандартные услуги выполняются без цикла дополнительных согласований."
+    },
+    {
+      "label": "Отключенная loyalty-система",
+      "value": "loyalty_disabled",
+      "description": "Администратор отключил лояльность, заказ проходит без баллов/скидок."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой вариант",
+  "multi_select": true,
+  "type": "multi-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-13T15-31-11-937",
+    "launched_at": "2026-05-13T15:31:11.941Z"
+  }
+}

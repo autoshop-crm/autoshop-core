@@ -8,10 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 
 public interface PartRepository extends BaseRepository<Part, Integer> {
 
     Optional<Part> findByArticleNumber(String articleNumber);
+
+    List<Part> findAllByArticleNumberIn(Collection<String> articleNumbers);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Part p where p.id = :id")

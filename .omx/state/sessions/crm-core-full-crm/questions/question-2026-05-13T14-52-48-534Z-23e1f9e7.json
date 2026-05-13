@@ -1,0 +1,21 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-13T14-52-48-534Z-23e1f9e7",
+  "session_id": "crm-core-full-crm",
+  "created_at": "2026-05-13T14:52:48.534Z",
+  "updated_at": "2026-05-13T14:52:48.552Z",
+  "status": "prompting",
+  "header": "Round 3",
+  "question": "Round 3 | Target: non-goals | Ambiguity: 64%\n\nПредставь, что после Phase 1 кто-то говорит: “Но здесь ещё нет X, значит CRM не готова”. Назови 2–3 вещи, про которые ты готов жёстко ответить: “Да, этого пока нет, и это осознанно не входит в первый полноценный CRM-релиз”. Нужны именно non-goals, а не просто хотелки на потом.",
+  "options": [],
+  "allow_other": true,
+  "other_label": "Ответ",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-13T14-52-48-534",
+    "launched_at": "2026-05-13T14:52:48.539Z"
+  }
+}

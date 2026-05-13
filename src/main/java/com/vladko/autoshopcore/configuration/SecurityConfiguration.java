@@ -59,6 +59,7 @@ public class SecurityConfiguration {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/internal/employees/sync").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/procurement/purchase-orders").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.POST, "/api/procurement/stock-receipts").hasAnyRole("ADMIN", "MANAGER")
@@ -87,6 +88,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/customers", "/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.PUT, "/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.DELETE, "/api/customers/**").hasAnyRole("ADMIN", "MANAGER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/employees", "/api/employees/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/vehicles", "/api/vehicles/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
                         .requestMatchers(HttpMethod.POST, "/api/vehicles", "/api/vehicles/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")

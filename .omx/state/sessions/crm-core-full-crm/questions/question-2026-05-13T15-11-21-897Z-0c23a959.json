@@ -1,0 +1,21 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-13T15-11-21-897Z-0c23a959",
+  "session_id": "crm-core-full-crm",
+  "created_at": "2026-05-13T15:11:21.897Z",
+  "updated_at": "2026-05-13T15:11:21.920Z",
+  "status": "prompting",
+  "header": "Round 6",
+  "question": "Round 6 | Target: success criteria | Ambiguity: 24%\n\nПредставь демонстрацию первого полноценного CRM-релиза. Какие 3–5 сценариев обязательно должны пройти end-to-end без ручных обходов, чтобы ты сказал: да, Core как CRM уже готов? Нужны именно проверяемые сценарии, а не список функций.",
+  "options": [],
+  "allow_other": true,
+  "other_label": "Ответ",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-13T15-11-21-897",
+    "launched_at": "2026-05-13T15:11:21.901Z"
+  }
+}

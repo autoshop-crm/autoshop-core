@@ -33,6 +33,10 @@ public class Employee implements BaseEntity<Integer> {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
+    @Size(max = 100)
+    @Column(name = "email", unique = true, length = 100)
+    private String email;
+
     @NotNull
     @Column(name = "function", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
@@ -41,4 +45,11 @@ public class Employee implements BaseEntity<Integer> {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @PrePersist
+    private void prePersist() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 }

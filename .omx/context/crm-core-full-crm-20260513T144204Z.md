@@ -1,0 +1,28 @@
+# Context Snapshot
+
+- Task statement: Analyze what is missing in `autoshop-core` to reach a full CRM-ready backend state, then conduct a deep interview and produce a staged implementation plan with special focus on internal flow.
+- Desired outcome: A validated requirements artifact and development roadmap for CRM functionality in Core.
+- Stated solution: Use deep-interview to clarify target CRM scope and flow, grounded in existing backend evidence and prior analysis.
+- Probable intent hypothesis: Avoid designing an incomplete CRM around the current service-order model; converge on a robust domain flow before implementation.
+- Known facts/evidence:
+  - Existing `Order` lifecycle is repair-centric (`NEW`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`).
+  - Existing API lacks appointment/calendar/check-in/check-out/no-show/reschedule semantics.
+  - Previous analysis indicates `Order` currently mixes lead, appointment, visit, and work-order concerns.
+- Constraints:
+  - Work is brownfield in `autoshop-core`.
+  - User asked for plan/spec, not implementation.
+  - Need to think through CRM flow correctly before planning execution.
+- Unknowns/open questions:
+  - Target operating model: appointment-first CRM vs repair-order-first CRM.
+  - Required CRM coverage after visit: communication, pipeline, reminders, loyalty, analytics, staff workload.
+  - Non-goals and acceptable deferrals for MVP.
+  - Decision boundaries OMX may choose without confirmation.
+- Decision-boundary unknowns:
+  - Whether to introduce a new aggregate for appointment/visit.
+  - Whether `Order` remains work-order only or stays mixed.
+  - Whether visit planning is service-advisor-centric, mechanic-centric, or both.
+- Likely codebase touchpoints:
+  - `src/main/java/com/vladko/autoshopcore/order/`
+  - `src/main/java/com/vladko/autoshopcore/client/`
+  - `src/main/java/com/vladko/autoshopcore/vehicle/`
+  - scheduling/notification/security/integration modules if CRM expands.

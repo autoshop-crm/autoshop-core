@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-20-37-372Z-aff6d257",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:20:37.372Z",
+  "updated_at": "2026-05-11T23:20:37.386Z",
+  "status": "prompting",
+  "header": "Round 8",
+  "question": "Когда менеджер фиксирует поступление детали на склад, что backend должен сделать с уже созданной деталью заказа, которая раньше была `нет в наличии/заказано`?",
+  "options": [
+    {
+      "label": "Связать с локальным Part и считать готовой",
+      "value": "link-to-local-part",
+      "description": "После receipt деталь заказа связывается с локальной складской позицией и дальше считается обычной складской деталью для выполнения заказа."
+    },
+    {
+      "label": "Оставить отдельной, но пометить доставленной",
+      "value": "keep-separate-received",
+      "description": "Даже после прихода это остаётся отдельный order-level объект, просто со статусом `на складе`."
+    },
+    {
+      "label": "Решение backend",
+      "value": "backend-decides",
+      "description": "Можно выбрать внутреннюю модель свободно, если поведение для пользователей останется тем же."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой вариант",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-20-37-372",
+    "launched_at": "2026-05-11T23:20:37.377Z"
+  }
+}

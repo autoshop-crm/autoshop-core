@@ -15,7 +15,7 @@ public class UmapiPassengerModificationResponse {
     private String name;
 
     @JsonProperty("POWER_PS")
-    private Integer powerPs;
+    private BigDecimal powerPs;
 
     @JsonProperty("CAPACITY_LT")
     private BigDecimal capacityLiters;

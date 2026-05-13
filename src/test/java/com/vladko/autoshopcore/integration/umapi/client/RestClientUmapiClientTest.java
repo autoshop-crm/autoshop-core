@@ -3,7 +3,6 @@ package com.vladko.autoshopcore.integration.umapi.client;
 import com.vladko.autoshopcore.integration.umapi.config.UmapiProperties;
 import com.vladko.autoshopcore.integration.umapi.dto.UmapiAnalogsResponse;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -104,7 +103,7 @@ class RestClientUmapiClientTest {
     }
 
     @Test
-    void getPassengerModificationsShouldPassModelSeriesId() {
+    void getPassengerModificationsShouldPassModelSeriesIdAndMapDecimalStrings() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://api.umapi.ru");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         RestClientUmapiClient client = new RestClientUmapiClient(builder.build(), properties());
@@ -114,13 +113,23 @@ class RestClientUmapiClientTest {
                 .andExpect(header("X-App-Key", "umapi-key"))
                 .andRespond(withSuccess("""
                         [
-                          { "PC_ID": 333, "PASSENGER_CAR": "Camry 2.5", "POWER_PS": 181 }
+                          {
+                            "PC_ID": 333,
+                            "PASSENGER_CAR": "Camry 2.5",
+                            "POWER_PS": "181.0000",
+                            "CAPACITY_LT": "2.5000",
+                            "ENGINE_TYPE": "Бензиновый двигатель",
+                            "BODY_TYPE": "Седан",
+                            "FUEL_TYPE": "бензин"
+                          }
                         ]
                         """, MediaType.APPLICATION_JSON));
 
         var response = client.getPassengerModifications("PC", 222);
 
         assertThat(response.get(0).getModificationId()).isEqualTo(333);
+        assertThat(response.get(0).getPowerPs()).isEqualTo(new java.math.BigDecimal("181.0000"));
+        assertThat(response.get(0).getCapacityLiters()).isEqualTo(new java.math.BigDecimal("2.5000"));
         server.verify();
     }
 
@@ -152,6 +161,7 @@ class RestClientUmapiClientTest {
         RestClientUmapiClient client = new RestClientUmapiClient(builder.build(), properties());
 
         server.expect(requestTo(containsString("/v2/autocatalog/ru-WWW/Articles")))
+                .andExpect(requestTo(containsString("PT_IDS=7,8")))
                 .andExpect(requestTo(containsString("ID=333")))
                 .andExpect(requestTo(containsString("limit=10")))
                 .andExpect(requestTo(containsString("offset=0")))

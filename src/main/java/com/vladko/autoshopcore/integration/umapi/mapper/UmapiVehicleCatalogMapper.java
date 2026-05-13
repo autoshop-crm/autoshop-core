@@ -9,6 +9,7 @@ import com.vladko.autoshopcore.parts.dto.catalog.CatalogModificationResponseDTO;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class UmapiVehicleCatalogMapper {
                 .modelSeriesId(modelSeriesId)
                 .modificationId(item.getModificationId())
                 .name(item.getName())
-                .powerPs(item.getPowerPs())
+                .powerPs(toInteger(item.getPowerPs()))
                 .capacityLiters(item.getCapacityLiters())
                 .engineType(item.getEngineType())
                 .bodyType(item.getBodyType())
@@ -54,12 +55,17 @@ public class UmapiVehicleCatalogMapper {
     private String displayName(UmapiPassengerModificationResponse item) {
         List<String> parts = new ArrayList<>();
         addIfPresent(parts, item.getName());
-        if (item.getPowerPs() != null) {
-            parts.add("%s hp".formatted(item.getPowerPs()));
+        Integer powerPs = toInteger(item.getPowerPs());
+        if (powerPs != null) {
+            parts.add("%s hp".formatted(powerPs));
         }
         addIfPresent(parts, item.getFuelType());
         addIfPresent(parts, item.getBodyType());
         return String.join(", ", parts);
+    }
+
+    private Integer toInteger(BigDecimal value) {
+        return value == null ? null : value.intValue();
     }
 
     private void addIfPresent(List<String> parts, String value) {

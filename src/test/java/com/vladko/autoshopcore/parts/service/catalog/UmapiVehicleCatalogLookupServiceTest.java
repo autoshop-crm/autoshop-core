@@ -5,11 +5,14 @@ import com.vladko.autoshopcore.integration.shared.JsonRedisCacheService;
 import com.vladko.autoshopcore.integration.umapi.client.UmapiClient;
 import com.vladko.autoshopcore.integration.umapi.config.UmapiProperties;
 import com.vladko.autoshopcore.integration.umapi.dto.catalog.UmapiManufacturerResponse;
+import com.vladko.autoshopcore.integration.umapi.dto.catalog.UmapiPassengerModificationResponse;
 import com.vladko.autoshopcore.integration.umapi.mapper.UmapiVehicleCatalogMapper;
 import com.vladko.autoshopcore.integration.umapi.support.UmapiCatalogCacheKeyFactory;
 import com.vladko.autoshopcore.parts.dto.catalog.CatalogManufacturerResponseDTO;
+import com.vladko.autoshopcore.parts.dto.catalog.CatalogModificationResponseDTO;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +68,31 @@ class UmapiVehicleCatalogLookupServiceTest {
         var response = service.getManufacturers("pc", true);
 
         assertThat(response.get(0).getManufacturerId()).isEqualTo(111);
+        verify(cacheService).put(anyString(), any(), any(Duration.class));
+    }
+
+    @Test
+    void getModificationsShouldMapDecimalStringFieldsFromUmapi() {
+        when(cacheService.getList(anyString(), eq(CatalogModificationResponseDTO.class)))
+                .thenReturn(Optional.empty());
+
+        UmapiPassengerModificationResponse item = new UmapiPassengerModificationResponse();
+        item.setModificationId(18099);
+        item.setName("1.3 (BK14)");
+        item.setPowerPs(new BigDecimal("84.0000"));
+        item.setCapacityLiters(new BigDecimal("1.3000"));
+        item.setEngineType("Бензиновый двигатель");
+        item.setBodyType("Хэтчбэк");
+        item.setFuelType("бензин");
+        when(umapiClient.getPassengerModifications("PC", 5062)).thenReturn(List.of(item));
+
+        var response = service.getModifications("PC", 5062);
+
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).getModificationId()).isEqualTo(18099);
+        assertThat(response.get(0).getPowerPs()).isEqualTo(84);
+        assertThat(response.get(0).getCapacityLiters()).isEqualTo(new java.math.BigDecimal("1.3000"));
+        assertThat(response.get(0).getDisplayName()).contains("1.3 (BK14)", "84 hp", "бензин", "Хэтчбэк");
         verify(cacheService).put(anyString(), any(), any(Duration.class));
     }
 
