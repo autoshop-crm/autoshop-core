@@ -107,6 +107,9 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PUT, "/api/parts", "/api/parts/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.DELETE, "/api/parts/**").hasAnyRole("ADMIN", "MANAGER")
 
+                        .requestMatchers(HttpMethod.GET, "/api/service-catalog/categories", "/api/service-catalog/services").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/service-catalog/categories", "/api/service-catalog/services").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/service-catalog/services/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/loyalty/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.GET, "/api/crm/orders/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
                         .requestMatchers("/api/**").denyAll()
