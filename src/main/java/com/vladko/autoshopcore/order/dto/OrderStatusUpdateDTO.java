@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.order.dto;
 
+import com.vladko.autoshopcore.order.entity.CancellationReason;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,4 +15,9 @@ import lombok.NoArgsConstructor;
 public class OrderStatusUpdateDTO {
     @NotNull
     private OrderStatus status;
+    private CancellationReason cancellationReason;
+
+    public OrderStatusUpdateDTO(OrderStatus status) {
+        this.status = status;
+    }
 }

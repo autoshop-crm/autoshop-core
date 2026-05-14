@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.parts.entity;
 
+import com.vladko.autoshopcore.order.approval.entity.OrderApprovalRequest;
 import com.vladko.autoshopcore.order.entity.Order;
 import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
@@ -27,6 +28,10 @@ public class OrderRequestedPart implements BaseEntity<Integer> {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approval_request_id")
+    private OrderApprovalRequest approvalRequest;
 
     @Column(name = "article_number", nullable = false, length = 30)
     private String articleNumber;

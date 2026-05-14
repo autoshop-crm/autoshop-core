@@ -4,6 +4,8 @@ import com.vladko.autoshopcore.order.entity.Order;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
 import com.vladko.autoshopcore.order.service.OrderFinancialsService;
+import com.vladko.autoshopcore.order.timeline.service.OrderTimelineService;
+import com.vladko.autoshopcore.security.CoreSecurityService;
 import com.vladko.autoshopcore.parts.dto.OrderRequestedPartCreateDTO;
 import com.vladko.autoshopcore.parts.dto.OrderRequestedPartOrderDTO;
 import com.vladko.autoshopcore.parts.dto.OrderRequestedPartReceiveDTO;
@@ -27,6 +29,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +41,8 @@ class OrderRequestedPartServiceTest {
     @Mock private OrderRequestedPartRepository orderRequestedPartRepository;
     @Mock private PurchaseOrderService purchaseOrderService;
     @Mock private OrderFinancialsService orderFinancialsService;
+    @Mock private CoreSecurityService coreSecurityService;
+    @Mock private OrderTimelineService orderTimelineService;
 
     private OrderRequestedPartMapper mapper;
     private OrderRequestedPartService service;
@@ -48,8 +53,10 @@ class OrderRequestedPartServiceTest {
     void setUp() {
         mapper = new OrderRequestedPartMapper();
         service = new OrderRequestedPartServiceImpl(orderRepository, partRepository, orderRequestedPartRepository, mapper);
-        procurementService = new OrderRequestedPartProcurementServiceImpl(orderRequestedPartRepository, purchaseOrderService, orderRepository, orderFinancialsService, mapper);
-        receiptService = new OrderRequestedPartReceiptServiceImpl(orderRequestedPartRepository, partRepository, orderRepository, orderFinancialsService, mapper);
+        procurementService = new OrderRequestedPartProcurementServiceImpl(orderRequestedPartRepository, purchaseOrderService, orderRepository, orderFinancialsService, mapper, coreSecurityService, orderTimelineService);
+        receiptService = new OrderRequestedPartReceiptServiceImpl(orderRequestedPartRepository, partRepository, orderRepository, orderFinancialsService, mapper, coreSecurityService, orderTimelineService);
+        lenient().when(coreSecurityService.currentActor()).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
+        lenient().when(coreSecurityService.requireRoles(any())).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
     }
 
     @Test

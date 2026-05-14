@@ -8,11 +8,15 @@ import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.dto.OrderUpdateDTO;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface OrderService {
 
     OrderResponseDTO create(OrderCreateDTO dto);
+
+    OrderResponseDTO createImmediateDropOff(OrderCreateDTO dto);
 
     OrderResponseDTO getById(Integer id);
 
@@ -24,9 +28,21 @@ public interface OrderService {
 
     OrderResponseDTO updateStatus(Integer id, OrderStatusUpdateDTO dto);
 
+    OrderResponseDTO checkInVehicle(Integer id);
+
+    OrderResponseDTO cancelNoShow(Integer id);
+
+    List<OrderResponseDTO> getAll();
+
     List<OrderResponseDTO> getAllByCustomerId(Integer customerId);
 
     List<OrderResponseDTO> getAllByVehicleId(Integer vehicleId);
 
     List<OrderResponseDTO> getAllByStatus(OrderStatus status);
+
+    List<OrderResponseDTO> getBookings(Instant from, Instant to);
+
+    List<OrderResponseDTO> getDailyArrivals(LocalDate date);
+
+    List<OrderResponseDTO> getUnassignedBookings(LocalDate date);
 }

@@ -42,8 +42,50 @@ public class Order implements BaseEntity<Integer> {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 40)
     private OrderStatus status = OrderStatus.NEW;
+
+    @Column(name = "planned_visit_at")
+    private Instant plannedVisitAt;
+
+    @Column(name = "planned_slot_minutes")
+    private Integer plannedSlotMinutes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "booking_channel", length = 20)
+    private BookingChannel bookingChannel;
+
+    @Column(name = "intake_notes")
+    private String intakeNotes;
+
+    @Builder.Default
+    @Column(name = "requires_owner_approval_for_every_extra_work", nullable = false)
+    private Boolean requiresOwnerApprovalForEveryExtraWork = false;
+
+    @Builder.Default
+    @Column(name = "planned_drop_off", nullable = false)
+    private Boolean plannedDropOff = false;
+
+    @Column(name = "checked_in_at")
+    private Instant checkedInAt;
+
+    @Column(name = "ready_for_owner_at")
+    private Instant readyForOwnerAt;
+
+    @Column(name = "handed_over_at")
+    private Instant handedOverAt;
+
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cancellation_reason", length = 40)
+    private CancellationReason cancellationReason;
+
+    @Version
+    @Builder.Default
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
 
     @Builder.Default
     @ColumnDefault("0")
@@ -127,6 +169,15 @@ public class Order implements BaseEntity<Integer> {
         }
         if (finalAmount == null) {
             finalAmount = BigDecimal.ZERO;
+        }
+        if (requiresOwnerApprovalForEveryExtraWork == null) {
+            requiresOwnerApprovalForEveryExtraWork = false;
+        }
+        if (plannedDropOff == null) {
+            plannedDropOff = false;
+        }
+        if (version == null) {
+            version = 0L;
         }
     }
 

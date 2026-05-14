@@ -23,4 +23,24 @@ public class NoopOrderNotificationEventPublisher implements OrderNotificationEve
     public void publishOrderCompleted(OrderCompletedNotificationPayload payload) {
         log.debug("Order notification publishing is disabled: skipped ORDER_COMPLETED for orderId={}", payload.orderId());
     }
+
+    @Override
+    public void publishOrderApprovalNeeded(OrderApprovalNeededNotificationPayload payload) {
+        log.debug("Order notification publishing is disabled: skipped ORDER_APPROVAL_NEEDED for orderId={}", payload.orderId());
+    }
+
+    @Override
+    public void publishOrderWaitingForPart(OrderWaitingForPartNotificationPayload payload) {
+        log.debug("Order notification publishing is disabled: skipped ORDER_WAITING_FOR_PART for orderId={}", payload.orderId());
+    }
+
+    @Override
+    public void publishOrderReadyForOwner(OrderReadyForOwnerNotificationPayload payload) {
+        log.debug("Order notification publishing is disabled: skipped ORDER_READY_FOR_OWNER for orderId={}", payload.orderId());
+    }
+
+    @Override
+    public void publishOrderCancelled(OrderCancelledNotificationPayload payload) {
+        log.debug("Order notification publishing is disabled: skipped ORDER_CANCELLED for orderId={}", payload.orderId());
+    }
 }

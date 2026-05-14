@@ -85,6 +85,64 @@ public class OrderNotificationPayloadFactory {
         );
     }
 
+
+
+    public OrderApprovalNeededNotificationPayload orderApprovalNeeded(Order order, Long approvalRequestId, String approvalType, BigDecimal requestedAmount, Instant expiresAt) {
+        Customer customer = requireCustomer(order);
+        requireNotBlank(customer.getEmail(), "customer.email");
+        return new OrderApprovalNeededNotificationPayload(
+                toLong(requireId(order)),
+                orderNumberFormatter.format(requireId(order), order.getCreatedAt()),
+                toLong(requireId(customer)),
+                customer.getEmail(),
+                approvalRequestId,
+                approvalType,
+                defaultAmount(requestedAmount),
+                expiresAt
+        );
+    }
+
+    public OrderWaitingForPartNotificationPayload orderWaitingForPart(Order order, Long requestedPartId, String partName) {
+        Customer customer = requireCustomer(order);
+        requireNotBlank(customer.getEmail(), "customer.email");
+        return new OrderWaitingForPartNotificationPayload(
+                toLong(requireId(order)),
+                orderNumberFormatter.format(requireId(order), order.getCreatedAt()),
+                toLong(requireId(customer)),
+                customer.getEmail(),
+                requestedPartId,
+                partName,
+                order.getUpdatedAt() == null ? Instant.now() : order.getUpdatedAt()
+        );
+    }
+
+    public OrderReadyForOwnerNotificationPayload orderReadyForOwner(Order order) {
+        Customer customer = requireCustomer(order);
+        requireNotBlank(customer.getEmail(), "customer.email");
+        return new OrderReadyForOwnerNotificationPayload(
+                toLong(requireId(order)),
+                orderNumberFormatter.format(requireId(order), order.getCreatedAt()),
+                toLong(requireId(customer)),
+                customer.getEmail(),
+                requireInstant(order.getReadyForOwnerAt(), "order.readyForOwnerAt"),
+                defaultAmount(order.getFinalAmount()),
+                CURRENCY
+        );
+    }
+
+    public OrderCancelledNotificationPayload orderCancelled(Order order) {
+        Customer customer = requireCustomer(order);
+        requireNotBlank(customer.getEmail(), "customer.email");
+        return new OrderCancelledNotificationPayload(
+                toLong(requireId(order)),
+                orderNumberFormatter.format(requireId(order), order.getCreatedAt()),
+                toLong(requireId(customer)),
+                customer.getEmail(),
+                order.getCancellationReason() == null ? "UNKNOWN" : order.getCancellationReason().name(),
+                requireInstant(order.getCancelledAt(), "order.cancelledAt")
+        );
+    }
+
     private Customer requireCustomer(Order order) {
         Objects.requireNonNull(order, "order must not be null");
         if (order.getCustomer() == null) {

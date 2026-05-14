@@ -40,6 +40,26 @@ public class KafkaOrderNotificationEventPublisher implements OrderNotificationEv
         publish(OrderNotificationEventType.ORDER_COMPLETED, payload.orderId(), payload);
     }
 
+    @Override
+    public void publishOrderApprovalNeeded(OrderApprovalNeededNotificationPayload payload) {
+        publish(OrderNotificationEventType.ORDER_APPROVAL_NEEDED, payload.orderId(), payload);
+    }
+
+    @Override
+    public void publishOrderWaitingForPart(OrderWaitingForPartNotificationPayload payload) {
+        publish(OrderNotificationEventType.ORDER_WAITING_FOR_PART, payload.orderId(), payload);
+    }
+
+    @Override
+    public void publishOrderReadyForOwner(OrderReadyForOwnerNotificationPayload payload) {
+        publish(OrderNotificationEventType.ORDER_READY_FOR_OWNER, payload.orderId(), payload);
+    }
+
+    @Override
+    public void publishOrderCancelled(OrderCancelledNotificationPayload payload) {
+        publish(OrderNotificationEventType.ORDER_CANCELLED, payload.orderId(), payload);
+    }
+
     private void publish(OrderNotificationEventType eventType, Long orderId, Object payload) {
         UUID eventId = UUID.randomUUID();
         NotificationEventEnvelope envelope = new NotificationEventEnvelope(

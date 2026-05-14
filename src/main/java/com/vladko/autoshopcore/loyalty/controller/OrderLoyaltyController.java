@@ -1,7 +1,7 @@
 package com.vladko.autoshopcore.loyalty.controller;
 
 import com.vladko.autoshopcore.loyalty.dto.OrderLoyaltySpendDTO;
-import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
+import com.vladko.autoshopcore.loyalty.service.CrmLoyaltyFacade;
 import com.vladko.autoshopcore.order.dto.OrderResponseDTO;
 import com.vladko.autoshopcore.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OrderLoyaltyController {
 
-    private final LoyaltyService loyaltyService;
+    private final CrmLoyaltyFacade loyaltyService;
     private final OrderService orderService;
 
     @PutMapping("/spend")

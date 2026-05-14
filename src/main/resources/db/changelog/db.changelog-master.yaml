@@ -15,3 +15,11 @@ databaseChangeLog:
       file: db/changelog/db.changelog-1.6-employee-directory.sql
   - include:
       file: db/changelog/db.changelog-1.7-order-requested-parts.sql
+  - include:
+      file: db/changelog/db.changelog-1.8-crm-booking-and-service-catalog.sql
+  - include:
+      file: db/changelog/db.changelog-1.9-crm-approval-and-parts-lifecycle.sql
+  - include:
+      file: db/changelog/db.changelog-2.0-crm-roles-timeline-notifications.sql
+  - include:
+      file: db/changelog/db.changelog-2.1-crm-loyalty-query-readmodels.sql

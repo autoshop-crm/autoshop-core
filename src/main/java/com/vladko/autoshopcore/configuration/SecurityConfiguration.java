@@ -72,6 +72,10 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts/*/quotes").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts/*/order").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.POST, "/api/orders/*/requested-parts/*/receive").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/*/approvals").hasAnyRole("ADMIN", "MANAGER", "MECHANIC", "RECEPTIONIST", "CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/approvals").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/approvals/*/approve").hasAnyRole("ADMIN", "MANAGER", "CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/approvals/*/reject").hasAnyRole("ADMIN", "MANAGER", "CUSTOMER")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/parts/**").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
                         .requestMatchers(HttpMethod.DELETE, "/api/orders/*/parts/**").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/loyalty/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
@@ -80,7 +84,9 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/assign").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/estimate").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/status").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/*/timeline/customer").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC", "CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/*/timeline").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC", "CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
 
@@ -102,6 +108,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE, "/api/parts/**").hasAnyRole("ADMIN", "MANAGER")
 
                         .requestMatchers(HttpMethod.GET, "/api/loyalty/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
+                        .requestMatchers(HttpMethod.GET, "/api/crm/orders/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
                         .requestMatchers("/api/**").denyAll()
                         .anyRequest().denyAll()
                 );

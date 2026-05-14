@@ -13,6 +13,11 @@ import com.vladko.autoshopcore.parts.exception.OrderRequestedPartNotFoundExcepti
 import com.vladko.autoshopcore.parts.exception.PartNotFoundException;
 import com.vladko.autoshopcore.parts.repository.OrderRequestedPartRepository;
 import com.vladko.autoshopcore.parts.repository.PartRepository;
+import com.vladko.autoshopcore.order.timeline.entity.OrderTimelineEventType;
+import com.vladko.autoshopcore.order.timeline.entity.OrderTimelineVisibility;
+import com.vladko.autoshopcore.order.timeline.service.OrderTimelineService;
+import com.vladko.autoshopcore.security.CoreActor;
+import com.vladko.autoshopcore.security.CoreSecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +34,8 @@ public class OrderRequestedPartReceiptServiceImpl implements OrderRequestedPartR
     private final OrderRepository orderRepository;
     private final OrderFinancialsService orderFinancialsService;
     private final OrderRequestedPartMapper mapper;
+    private final CoreSecurityService coreSecurityService;
+    private final OrderTimelineService orderTimelineService;
 
     @Override
     @Transactional
@@ -44,6 +51,7 @@ public class OrderRequestedPartReceiptServiceImpl implements OrderRequestedPartR
             throw new IllegalArgumentException("Received quantity cannot be lower than requested quantity in first version");
         }
 
+        coreSecurityService.requireRoles("ADMIN", "MANAGER");
         Part part = resolveTargetPart(requestedPart, dto);
         part.setStockQuantity(part.getStockQuantity() + dto.getReceivedQuantity());
         if (dto.getSalePrice() != null) {
@@ -60,7 +68,15 @@ public class OrderRequestedPartReceiptServiceImpl implements OrderRequestedPartR
         orderRequestedPartRepository.save(requestedPart);
 
         orderFinancialsService.recalculateAfterMutableTotalsChange(order);
+        if (order.getStatus() == com.vladko.autoshopcore.order.entity.OrderStatus.WAITING_FOR_PART) {
+            order.setStatus(order.getEmployee() == null ? com.vladko.autoshopcore.order.entity.OrderStatus.DIAGNOSIS_IN_PROGRESS : com.vladko.autoshopcore.order.entity.OrderStatus.REPAIR_IN_PROGRESS);
+        }
         orderRepository.save(order);
+        CoreActor actor = safeActor();
+        orderTimelineService.append(order, OrderTimelineEventType.PART_RECEIVED, OrderTimelineVisibility.BOTH, actor.actorType(), actor.actorId(), order.getStatus(), "Part received", null, "part-received-" + requestedPart.getId() + "-" + requestedPart.getReceivedAt());
+        if (order.getStatus() == com.vladko.autoshopcore.order.entity.OrderStatus.REPAIR_IN_PROGRESS) {
+            orderTimelineService.append(order, OrderTimelineEventType.REPAIR_RESUMED, OrderTimelineVisibility.BOTH, actor.actorType(), actor.actorId(), order.getStatus(), "Repair resumed", null, "repair-resumed-" + order.getId() + "-" + requestedPart.getReceivedAt());
+        }
         return mapper.map(requestedPart);
     }
 
@@ -81,9 +97,14 @@ public class OrderRequestedPartReceiptServiceImpl implements OrderRequestedPartR
                 .build();
     }
 
+    private CoreActor safeActor() {
+        CoreActor actor = coreSecurityService.currentActor();
+        return actor == null ? new CoreActor(null, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.SYSTEM) : actor;
+    }
+
     private void ensureEditable(Order order) {
         switch (order.getStatus()) {
-            case NEW, IN_PROGRESS -> { }
+            case NEW, IN_PROGRESS, DIAGNOSIS_IN_PROGRESS, REPAIR_IN_PROGRESS, WAITING_FOR_PART -> { }
             default -> throw new InvalidOrderStateException("Order in status '%s' can no longer be updated".formatted(order.getStatus()));
         }
     }

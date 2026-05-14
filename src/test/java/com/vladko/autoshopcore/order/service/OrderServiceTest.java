@@ -9,7 +9,7 @@ import com.vladko.autoshopcore.event.notification.OrderCompletedNotificationPayl
 import com.vladko.autoshopcore.event.notification.OrderCreatedNotificationPayload;
 import com.vladko.autoshopcore.event.notification.OrderNotificationPayloadFactory;
 import com.vladko.autoshopcore.event.notification.OrderStatusChangedNotificationPayload;
-import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
+import com.vladko.autoshopcore.loyalty.service.CrmLoyaltyFacade;
 import com.vladko.autoshopcore.order.dto.OrderAssignmentDTO;
 import com.vladko.autoshopcore.order.dto.OrderCreateDTO;
 import com.vladko.autoshopcore.order.dto.OrderEstimateUpdateDTO;
@@ -27,10 +27,15 @@ import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
 import com.vladko.autoshopcore.order.repository.EmployeeRepository;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
+import com.vladko.autoshopcore.order.repository.OrderServiceItemRepository;
+import com.vladko.autoshopcore.order.timeline.service.OrderTimelineService;
 import com.vladko.autoshopcore.parts.service.OrderPartInventoryCoordinator;
+import com.vladko.autoshopcore.security.CoreSecurityService;
+import com.vladko.autoshopcore.servicecatalog.repository.ServicesRepository;
 import com.vladko.autoshopcore.vehicle.entity.Vehicle;
 import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import com.vladko.autoshopcore.vehicle.repository.VehicleRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,6 +46,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,13 +76,37 @@ class OrderServiceTest {
     private OrderPartInventoryCoordinator orderPartInventoryCoordinator;
 
     @Mock
-    private LoyaltyService loyaltyService;
+    private CrmLoyaltyFacade loyaltyService;
+
+    @Mock
+    private LegacyOrderStatusProjector legacyOrderStatusProjector;
 
     @Mock
     private OrderNotificationPayloadFactory orderNotificationPayloadFactory;
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Mock
+    private ServicesRepository servicesRepository;
+
+    @Mock
+    private OrderServiceItemRepository orderServiceItemRepository;
+
+    @Mock
+    private CoreSecurityService coreSecurityService;
+
+    @Mock
+    private OrderTimelineService orderTimelineService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(orderServiceItemRepository.findAllByOrderIdOrderByIdAsc(any(Integer.class))).thenReturn(List.of());
+        lenient().when(coreSecurityService.currentActor()).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
+        lenient().when(coreSecurityService.requireAnyStaff()).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
+        lenient().when(coreSecurityService.requireRoles(any())).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
+        lenient().doNothing().when(coreSecurityService).requireCustomerAccess(any());
+    }
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -114,8 +144,8 @@ class OrderServiceTest {
         OrderResponseDTO response = orderService.create(dto);
 
         ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepository).save(captor.capture());
-        Order orderToSave = captor.getValue();
+        verify(orderRepository, atLeastOnce()).save(captor.capture());
+        Order orderToSave = captor.getAllValues().get(0);
 
         assertThat(orderToSave.getCustomer()).isEqualTo(customer);
         assertThat(orderToSave.getVehicle()).isEqualTo(vehicle);

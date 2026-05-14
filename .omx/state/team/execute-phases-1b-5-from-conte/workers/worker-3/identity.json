@@ -1,0 +1,17 @@
+{
+  "name": "worker-3",
+  "index": 3,
+  "role": "executor",
+  "worker_cli": "codex",
+  "assigned_tasks": [
+    "3"
+  ],
+  "working_dir": "/Users/vladislavkovrigin/Projects/IdeaProjects/autoshop-core/.omx/team/execute-phases-1b-5-from-conte/worktrees/worker-3",
+  "worktree_repo_root": "/Users/vladislavkovrigin/Projects/IdeaProjects/autoshop-core",
+  "worktree_path": "/Users/vladislavkovrigin/Projects/IdeaProjects/autoshop-core/.omx/team/execute-phases-1b-5-from-conte/worktrees/worker-3",
+  "worktree_detached": true,
+  "worktree_created": true,
+  "team_state_root": "/Users/vladislavkovrigin/Projects/IdeaProjects/autoshop-core/.omx/state",
+  "pid": 82698,
+  "pane_id": "%24"
+}

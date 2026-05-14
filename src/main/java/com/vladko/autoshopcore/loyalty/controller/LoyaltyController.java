@@ -1,8 +1,10 @@
 package com.vladko.autoshopcore.loyalty.controller;
 
 import com.vladko.autoshopcore.loyalty.dto.LoyaltyAccountResponseDTO;
+import com.vladko.autoshopcore.loyalty.dto.LoyaltySettingsResponseDTO;
 import com.vladko.autoshopcore.loyalty.dto.LoyaltyTierResponseDTO;
 import com.vladko.autoshopcore.loyalty.dto.LoyaltyTransactionResponseDTO;
+import com.vladko.autoshopcore.loyalty.service.CrmLoyaltyFacade;
 import com.vladko.autoshopcore.loyalty.service.LoyaltyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +21,16 @@ import java.util.List;
 public class LoyaltyController {
 
     private final LoyaltyService loyaltyService;
+    private final CrmLoyaltyFacade crmLoyaltyFacade;
+
+    @GetMapping("/settings")
+    public ResponseEntity<LoyaltySettingsResponseDTO> getSettings() {
+        return ResponseEntity.ok(crmLoyaltyFacade.getSettings());
+    }
 
     @GetMapping("/accounts/customer/{customerId}")
     public ResponseEntity<LoyaltyAccountResponseDTO> getAccountByCustomerId(@PathVariable Integer customerId) {
-        return ResponseEntity.ok(loyaltyService.getOrCreateAccountByCustomerId(customerId));
+        return ResponseEntity.ok(crmLoyaltyFacade.getVisibleAccountByCustomerId(customerId));
     }
 
     @GetMapping("/accounts/{accountId}/transactions")
