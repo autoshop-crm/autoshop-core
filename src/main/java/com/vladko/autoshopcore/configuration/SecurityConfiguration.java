@@ -58,6 +58,7 @@ public class SecurityConfiguration {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/internal/employees/sync").permitAll()
 

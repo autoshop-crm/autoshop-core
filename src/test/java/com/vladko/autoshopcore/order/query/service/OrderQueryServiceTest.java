@@ -52,18 +52,18 @@ class OrderQueryServiceTest {
 
     @Test
     void searchShouldNormalizeQueryBeforeRepositoryCall() {
-        when(orderRepository.searchForCrm(null, null, null, null, null, null, "engine")).thenReturn(List.of());
+        when(orderRepository.searchForCrmByQuery(null, null, null, null, null, null, "engine")).thenReturn(List.of());
         when(crmLoyaltyFacade.getSettings()).thenReturn(LoyaltySettingsResponseDTO.builder().enabled(true).earnEnabled(true).spendEnabled(true).visible(true).build());
 
         var response = service.search(null, null, null, null, null, null, "  EnGinE  ", 0, 10);
 
         assertThat(response.getItems()).isEmpty();
-        verify(orderRepository).searchForCrm(null, null, null, null, null, null, "engine");
+        verify(orderRepository).searchForCrmByQuery(null, null, null, null, null, null, "engine");
     }
 
     @Test
     void searchShouldReturnPagedItemsAndLoyaltySettings() {
-        when(orderRepository.searchForCrm(null, null, null, null, null, null, null)).thenReturn(List.of(
+        when(orderRepository.searchForCrm(null, null, null, null, null, null)).thenReturn(List.of(
                 Order.builder().id(1).build(),
                 Order.builder().id(2).build()
         ));

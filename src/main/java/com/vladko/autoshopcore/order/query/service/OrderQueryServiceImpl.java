@@ -33,7 +33,9 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         int normalizedPage = Math.max(page, 0);
         int normalizedSize = Math.min(Math.max(size, 1), 100);
         String normalizedQuery = q == null || q.isBlank() ? null : q.trim().toLowerCase();
-        List<Order> matches = orderRepository.searchForCrm(customerId, vehicleId, status, employeeId, plannedFrom, plannedTo, normalizedQuery);
+        List<Order> matches = normalizedQuery == null
+                ? orderRepository.searchForCrm(customerId, vehicleId, status, employeeId, plannedFrom, plannedTo)
+                : orderRepository.searchForCrmByQuery(customerId, vehicleId, status, employeeId, plannedFrom, plannedTo, normalizedQuery);
         int fromIndex = Math.min(normalizedPage * normalizedSize, matches.size());
         int toIndex = Math.min(fromIndex + normalizedSize, matches.size());
         List<OrderResponseDTO> items = matches.subList(fromIndex, toIndex).stream()
