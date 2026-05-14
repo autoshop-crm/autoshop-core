@@ -23,3 +23,7 @@ databaseChangeLog:
       file: db/changelog/db.changelog-2.0-crm-roles-timeline-notifications.sql
   - include:
       file: db/changelog/db.changelog-2.1-crm-loyalty-query-readmodels.sql
+  - include:
+      file: db/changelog/db.changelog-2.2-booking-channel-simplification.sql
+  - include:
+      file: db/changelog/db.changelog-2.3-orders-status-column-length.sql

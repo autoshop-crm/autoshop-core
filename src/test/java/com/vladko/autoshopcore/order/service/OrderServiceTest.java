@@ -25,11 +25,13 @@ import com.vladko.autoshopcore.order.exception.EmployeeNotFoundException;
 import com.vladko.autoshopcore.order.exception.InvalidOrderStateException;
 import com.vladko.autoshopcore.order.exception.OrderConflictException;
 import com.vladko.autoshopcore.order.exception.OrderNotFoundException;
+import com.vladko.autoshopcore.order.repository.OrderAvailabilityProjection;
 import com.vladko.autoshopcore.order.repository.EmployeeRepository;
 import com.vladko.autoshopcore.order.repository.OrderRepository;
 import com.vladko.autoshopcore.order.repository.OrderServiceItemRepository;
 import com.vladko.autoshopcore.order.timeline.service.OrderTimelineService;
 import com.vladko.autoshopcore.parts.service.OrderPartInventoryCoordinator;
+import com.vladko.autoshopcore.security.AuthenticatedUser;
 import com.vladko.autoshopcore.security.CoreSecurityService;
 import com.vladko.autoshopcore.servicecatalog.repository.ServicesRepository;
 import com.vladko.autoshopcore.vehicle.entity.Vehicle;
@@ -38,6 +40,8 @@ import com.vladko.autoshopcore.vehicle.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -101,6 +105,7 @@ class OrderServiceTest {
 
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.clearContext();
         lenient().when(orderServiceItemRepository.findAllByOrderIdOrderByIdAsc(any(Integer.class))).thenReturn(List.of());
         lenient().when(coreSecurityService.currentActor()).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
         lenient().when(coreSecurityService.requireAnyStaff()).thenReturn(new com.vladko.autoshopcore.security.CoreActor(1L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MANAGER));
@@ -113,8 +118,8 @@ class OrderServiceTest {
 
     @Test
     void createShouldPersistOrderForConsistentCustomerAndVehicle() {
-        Customer customer = Customer.builder().id(1).build();
-        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
+        Customer customer = Customer.builder().id(1).firstName("Ivan").lastName("Petrov").email("ivan@test.com").phoneNumber("79990001122").build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).brand("BMW").model("X5").vin("VIN12345678901234").licensePlate("A123AA77").build();
         OrderCreateDTO dto = OrderCreateDTO.builder()
                 .customerId(1)
                 .vehicleId(2)
@@ -156,6 +161,57 @@ class OrderServiceTest {
         verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
         assertThat(eventCaptor.getValue().payload()).isEqualTo(payload);
         assertThat(response.getId()).isEqualTo(10);
+        assertThat(response.getCustomerEmail()).isEqualTo("ivan@test.com");
+        assertThat(response.getVehicleLicensePlate()).isEqualTo("A123AA77");
+    }
+
+    @Test
+    void getMyOrdersShouldReturnOrdersForCurrentMechanic() {
+        Customer customer = Customer.builder().id(1).build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
+        Employee employee = Employee.builder().id(7).email("test2@test.com").function(EmployeeType.MECHANIC).build();
+        when(coreSecurityService.requireRoles("MECHANIC"))
+                .thenReturn(new com.vladko.autoshopcore.security.CoreActor(7L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.MECHANIC));
+        when(employeeRepository.findByEmail("test2@test.com")).thenReturn(Optional.of(employee));
+        when(orderRepository.findAllByEmployeeIdOrderByIdDesc(7)).thenReturn(List.of(
+                Order.builder().id(31).customer(customer).vehicle(vehicle).employee(employee).problem("A").status(OrderStatus.NEW).laborTotal(BigDecimal.ZERO).partsTotal(BigDecimal.ZERO).costsTotal(BigDecimal.ZERO).discountAmount(BigDecimal.ZERO).finalAmount(BigDecimal.ZERO).build(),
+                Order.builder().id(30).customer(customer).vehicle(vehicle).employee(employee).problem("B").status(OrderStatus.ACCEPTED).laborTotal(BigDecimal.ZERO).partsTotal(BigDecimal.ZERO).costsTotal(BigDecimal.ZERO).discountAmount(BigDecimal.ZERO).finalAmount(BigDecimal.ZERO).build()
+        ));
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new AuthenticatedUser(12L, "test2@test.com", java.util.Set.of("MECHANIC"), "jti", Instant.parse("2026-05-20T10:00:00Z")),
+                null,
+                java.util.List.of()
+        ));
+
+        var response = orderService.getMyOrders();
+
+        assertThat(response).hasSize(2);
+        assertThat(response).extracting(OrderResponseDTO::getId).containsExactly(31, 30);
+    }
+
+    @Test
+    void createShouldRejectBusyEmployeeForSelectedSlot() {
+        Customer customer = Customer.builder().id(1).build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
+        Employee employee = Employee.builder().id(7).function(EmployeeType.MECHANIC).build();
+        OrderCreateDTO dto = OrderCreateDTO.builder()
+                .customerId(1)
+                .vehicleId(2)
+                .employeeId(7)
+                .problem("Diagnostics")
+                .plannedVisitAt(Instant.parse("2026-05-20T10:00:00Z"))
+                .plannedSlotMinutes(90)
+                .build();
+
+        when(customerRepository.findById(1)).thenReturn(Optional.of(customer));
+        when(vehicleRepository.findById(2)).thenReturn(Optional.of(vehicle));
+        when(employeeRepository.findById(7)).thenReturn(Optional.of(employee));
+        when(orderRepository.findFirstAvailabilityConflict(eq(7), isNull(), any(), any(), any()))
+                .thenReturn(List.of(new Projection(99, 7, Instant.parse("2026-05-20T10:30:00Z"), 60, OrderStatus.ACCEPTED)));
+
+        assertThatThrownBy(() -> orderService.create(dto))
+                .isInstanceOf(OrderConflictException.class)
+                .hasMessage("Employee is not available for the selected time slot");
     }
 
     @Test
@@ -509,9 +565,9 @@ class OrderServiceTest {
 
     @Test
     void assignEmployeeShouldAllowManager() {
-        Customer customer = Customer.builder().id(1).build();
-        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
-        Employee employee = Employee.builder().id(22).function(EmployeeType.MANAGER).build();
+        Customer customer = Customer.builder().id(1).firstName("Ivan").lastName("Petrov").email("ivan@test.com").phoneNumber("79990001122").build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).brand("BMW").model("X5").vin("VIN12345678901234").licensePlate("A123AA77").build();
+        Employee employee = Employee.builder().id(22).firstName("Anna").lastName("Manager").email("anna@test.com").function(EmployeeType.MANAGER).build();
         Order existingOrder = Order.builder()
                 .id(16)
                 .customer(customer)
@@ -536,6 +592,7 @@ class OrderServiceTest {
 
         assertThat(existingOrder.getEmployee()).isEqualTo(employee);
         assertThat(response.getEmployeeId()).isEqualTo(22);
+        assertThat(response.getEmployeeEmail()).isEqualTo("anna@test.com");
     }
 
     @Test
@@ -576,6 +633,40 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.assignEmployee(18, new OrderAssignmentDTO(21)))
                 .isInstanceOf(InvalidOrderStateException.class)
                 .hasMessage("Order in status 'COMPLETED' can no longer be updated");
+    }
+
+    @Test
+    void assignEmployeeShouldRejectBusyEmployeeForSelectedSlot() {
+        Customer customer = Customer.builder().id(1).build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
+        Employee employee = Employee.builder().id(21).function(EmployeeType.MECHANIC).build();
+        Order existingOrder = Order.builder()
+                .id(20)
+                .customer(customer)
+                .vehicle(vehicle)
+                .problem("Diagnostics")
+                .status(OrderStatus.WAITING_FOR_VISIT)
+                .plannedVisitAt(Instant.parse("2026-05-20T10:00:00Z"))
+                .plannedSlotMinutes(60)
+                .build();
+
+        when(orderRepository.findById(20)).thenReturn(Optional.of(existingOrder));
+        when(employeeRepository.findById(21)).thenReturn(Optional.of(employee));
+        when(orderRepository.findFirstAvailabilityConflict(eq(21), eq(20), any(), any(), any()))
+                .thenReturn(List.of(new Projection(101, 21, Instant.parse("2026-05-20T10:30:00Z"), 60, OrderStatus.ACCEPTED)));
+
+        assertThatThrownBy(() -> orderService.assignEmployee(20, new OrderAssignmentDTO(21)))
+                .isInstanceOf(OrderConflictException.class)
+                .hasMessage("Employee is not available for the selected time slot");
+    }
+
+    private record Projection(Integer id, Integer employeeId, Instant plannedVisitAt, Integer plannedSlotMinutes,
+                              OrderStatus status) implements OrderAvailabilityProjection {
+        @Override public Integer getId() { return id; }
+        @Override public Integer getEmployeeId() { return employeeId; }
+        @Override public Instant getPlannedVisitAt() { return plannedVisitAt; }
+        @Override public Integer getPlannedSlotMinutes() { return plannedSlotMinutes; }
+        @Override public OrderStatus getStatus() { return status; }
     }
 
     @Test

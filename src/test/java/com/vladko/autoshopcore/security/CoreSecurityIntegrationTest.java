@@ -169,6 +169,34 @@ class CoreSecurityIntegrationTest {
     }
 
     @Test
+    void mechanicCanGetMyOrders() throws Exception {
+        when(authServiceClient.validateAccessToken("mechanic-token"))
+                .thenReturn(user("MECHANIC"));
+        when(orderService.getMyOrders()).thenReturn(java.util.List.of(
+                OrderResponseDTO.builder()
+                        .id(10)
+                        .customerId(1)
+                        .vehicleId(2)
+                        .employeeId(1)
+                        .problem("Diagnostics")
+                        .status(OrderStatus.IN_PROGRESS)
+                        .laborTotal(BigDecimal.ZERO)
+                        .partsTotal(BigDecimal.ZERO)
+                        .costsTotal(BigDecimal.ZERO)
+                        .discountAmount(BigDecimal.ZERO)
+                        .finalAmount(BigDecimal.ZERO)
+                        .createdAt(Instant.parse("2026-04-21T09:00:00Z"))
+                        .updatedAt(Instant.parse("2026-04-21T09:10:00Z"))
+                        .build()
+        ));
+
+        mockMvc.perform(get("/api/orders/my")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("mechanic-token")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10));
+    }
+
+    @Test
     void managerCanCreatePurchaseOrder() throws Exception {
         when(authServiceClient.validateAccessToken("manager-token"))
                 .thenReturn(user("MANAGER"));

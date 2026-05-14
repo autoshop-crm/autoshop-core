@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface EmployeeRepository extends BaseRepository<Employee, Integer> {
+public interface EmployeeRepository extends BaseRepository<Employee, Integer>, EmployeeRepositoryCustom {
 
     List<Employee> findAllByOrderByIdAsc();
 

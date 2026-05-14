@@ -103,6 +103,32 @@ class OrderControllerTest {
     }
 
     @Test
+    void getMyOrdersShouldReturnOrders() throws Exception {
+        when(orderService.getMyOrders()).thenReturn(java.util.List.of(
+                OrderResponseDTO.builder()
+                        .id(21)
+                        .customerId(1)
+                        .vehicleId(2)
+                        .employeeId(7)
+                        .problem("Diagnostics")
+                        .status(OrderStatus.REPAIR_IN_PROGRESS)
+                        .laborTotal(BigDecimal.ZERO)
+                        .partsTotal(BigDecimal.ZERO)
+                        .costsTotal(BigDecimal.ZERO)
+                        .discountAmount(BigDecimal.ZERO)
+                        .finalAmount(BigDecimal.ZERO)
+                        .createdAt(Instant.parse("2026-04-14T10:15:30Z"))
+                        .updatedAt(Instant.parse("2026-04-14T10:20:30Z"))
+                        .build()
+        ));
+
+        mockMvc.perform(get("/api/orders/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(21))
+                .andExpect(jsonPath("$[0].employeeId").value(7));
+    }
+
+    @Test
     void createShouldReturnConflictForCustomerVehicleMismatch() throws Exception {
         OrderCreateDTO dto = OrderCreateDTO.builder()
                 .customerId(1)

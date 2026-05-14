@@ -38,6 +38,7 @@ import com.vladko.autoshopcore.order.timeline.entity.OrderTimelineEventType;
 import com.vladko.autoshopcore.order.timeline.entity.OrderTimelineVisibility;
 import com.vladko.autoshopcore.order.timeline.service.OrderTimelineService;
 import com.vladko.autoshopcore.parts.service.OrderPartInventoryCoordinator;
+import com.vladko.autoshopcore.security.AuthenticatedUser;
 import com.vladko.autoshopcore.security.CoreActor;
 import com.vladko.autoshopcore.security.CoreSecurityService;
 import com.vladko.autoshopcore.servicecatalog.repository.ServicesRepository;
@@ -46,6 +47,8 @@ import com.vladko.autoshopcore.vehicle.exception.VehicleNotFoundException;
 import com.vladko.autoshopcore.vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +56,10 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +74,7 @@ public class OrderServiceImpl implements OrderService {
             OrderStatus.REPAIR_IN_PROGRESS,
             OrderStatus.READY_FOR_OWNER
     );
+    private static final int DEFAULT_SLOT_MINUTES = 60;
 
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
@@ -134,6 +140,7 @@ public class OrderServiceImpl implements OrderService {
         if (dto.getRequiresOwnerApprovalForEveryExtraWork() != null) {
             order.setRequiresOwnerApprovalForEveryExtraWork(dto.getRequiresOwnerApprovalForEveryExtraWork());
         }
+        validateEmployeeAvailability(order.getEmployee(), order.getPlannedVisitAt(), resolveSlotMinutes(order.getPlannedSlotMinutes()), order.getId());
         Order saved = orderRepository.save(order);
         replaceServiceLines(saved, dto.getSelectedServiceIds());
         repriceLaborFromSelectedServices(saved);
@@ -146,7 +153,9 @@ public class OrderServiceImpl implements OrderService {
         coreSecurityService.requireRoles("ADMIN", "MANAGER");
         Order order = findOrder(id);
         ensureOrderIsMutable(order);
-        order.setEmployee(dto.getEmployeeId() == null ? null : findAssignableEmployee(dto.getEmployeeId()));
+        Employee employee = dto.getEmployeeId() == null ? null : findAssignableEmployee(dto.getEmployeeId());
+        validateEmployeeAvailability(employee, order.getPlannedVisitAt(), resolveSlotMinutes(order.getPlannedSlotMinutes()), order.getId());
+        order.setEmployee(employee);
         return mapToResponse(orderRepository.save(order));
     }
 
@@ -279,6 +288,30 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<OrderResponseDTO> getMyOrders() {
+        coreSecurityService.requireRoles("MECHANIC");
+        Employee employee = findCurrentMechanicByEmail();
+        return orderRepository.findAllByEmployeeIdOrderByIdDesc(employee.getId()).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private Employee findCurrentMechanicByEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser)) {
+            throw new OrderConflictException("Authenticated mechanic email is missing");
+        }
+        String email = authenticatedUser.email();
+        if (email == null || email.isBlank()) {
+            throw new OrderConflictException("Authenticated mechanic email is missing");
+        }
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        return employeeRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new OrderConflictException("Authenticated mechanic '%s' is not linked to employee record".formatted(normalizedEmail)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<OrderResponseDTO> getAllByStatus(OrderStatus status) {
         return orderRepository.findAllByStatusOrderByIdDesc(status).stream().map(this::mapToResponse).toList();
     }
@@ -316,6 +349,7 @@ public class OrderServiceImpl implements OrderService {
         validateCreateInput(dto);
 
         Employee employee = dto.getEmployeeId() == null ? null : findAssignableEmployee(dto.getEmployeeId());
+        validateEmployeeAvailability(employee, dto.getPlannedVisitAt(), resolveSlotMinutes(dto.getPlannedSlotMinutes()), null);
         OrderStatus initialStatus = immediateDropOff ? OrderStatus.ACCEPTED : dto.getPlannedVisitAt() != null ? OrderStatus.WAITING_FOR_VISIT : OrderStatus.NEW;
         Instant now = Instant.now();
 
@@ -327,7 +361,7 @@ public class OrderServiceImpl implements OrderService {
                 .status(initialStatus)
                 .plannedVisitAt(dto.getPlannedVisitAt())
                 .plannedSlotMinutes(dto.getPlannedSlotMinutes())
-                .bookingChannel(dto.getBookingChannel() == null ? BookingChannel.INTERNAL : dto.getBookingChannel())
+                .bookingChannel(dto.getBookingChannel() == null ? BookingChannel.WALK_IN : dto.getBookingChannel())
                 .intakeNotes(normalizeOptionalText(dto.getIntakeNotes()))
                 .requiresOwnerApprovalForEveryExtraWork(Boolean.TRUE.equals(dto.getRequiresOwnerApprovalForEveryExtraWork()))
                 .plannedDropOff(immediateDropOff)
@@ -437,6 +471,27 @@ public class OrderServiceImpl implements OrderService {
         if (!vehicle.getCustomer().getId().equals(customer.getId())) {
             throw new OrderConflictException("Vehicle does not belong to the specified customer");
         }
+    }
+
+    private void validateEmployeeAvailability(Employee employee, Instant plannedVisitAt, Integer slotMinutes, Integer excludeOrderId) {
+        if (employee == null || plannedVisitAt == null || slotMinutes == null || slotMinutes <= 0) {
+            return;
+        }
+        Instant requestedEnd = plannedVisitAt.plus(slotMinutes, ChronoUnit.MINUTES);
+        boolean hasConflict = !orderRepository.findFirstAvailabilityConflict(
+                employee.getId(),
+                excludeOrderId,
+                BOOKING_STATUSES.stream().map(Enum::name).toList(),
+                plannedVisitAt,
+                requestedEnd
+        ).isEmpty();
+        if (hasConflict) {
+            throw new OrderConflictException("Employee is not available for the selected time slot");
+        }
+    }
+
+    private Integer resolveSlotMinutes(Integer slotMinutes) {
+        return slotMinutes == null || slotMinutes <= 0 ? DEFAULT_SLOT_MINUTES : slotMinutes;
     }
 
     private void ensureOrderIsMutable(Order order) {
@@ -569,8 +624,19 @@ public class OrderServiceImpl implements OrderService {
         return OrderResponseDTO.builder()
                 .id(order.getId())
                 .customerId(order.getCustomer().getId())
+                .customerFirstName(order.getCustomer().getFirstName())
+                .customerLastName(order.getCustomer().getLastName())
+                .customerEmail(order.getCustomer().getEmail())
+                .customerPhoneNumber(order.getCustomer().getPhoneNumber())
                 .vehicleId(order.getVehicle().getId())
+                .vehicleBrand(order.getVehicle().getBrand())
+                .vehicleModel(order.getVehicle().getModel())
+                .vehicleVin(order.getVehicle().getVin())
+                .vehicleLicensePlate(order.getVehicle().getLicensePlate())
                 .employeeId(order.getEmployee() == null ? null : order.getEmployee().getId())
+                .employeeFirstName(order.getEmployee() == null ? null : order.getEmployee().getFirstName())
+                .employeeLastName(order.getEmployee() == null ? null : order.getEmployee().getLastName())
+                .employeeEmail(order.getEmployee() == null ? null : order.getEmployee().getEmail())
                 .problem(order.getProblem())
                 .status(order.getStatus())
                 .crmStatus(order.getStatus())

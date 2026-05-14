@@ -38,6 +38,8 @@ public interface OrderService {
 
     List<OrderResponseDTO> getAllByVehicleId(Integer vehicleId);
 
+    List<OrderResponseDTO> getMyOrders();
+
     List<OrderResponseDTO> getAllByStatus(OrderStatus status);
 
     List<OrderResponseDTO> getBookings(Instant from, Instant to);

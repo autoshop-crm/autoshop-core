@@ -85,6 +85,11 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getAllByVehicleId(vehicleId));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<OrderResponseDTO>> getMyOrders() {
+        return ResponseEntity.ok(orderService.getMyOrders());
+    }
+
     @GetMapping("/status/{status}")
     public ResponseEntity<List<OrderResponseDTO>> getAllByStatus(@PathVariable OrderStatus status) {
         return ResponseEntity.ok(orderService.getAllByStatus(status));
