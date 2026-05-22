@@ -1,6 +1,5 @@
 package com.vladko.autoshopcore.customerauth.service;
 
-import com.vladko.autoshopcore.client.dto.CustomerCreateDTO;
 import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.client.exception.CustomerConflictException;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class CustomerIdentityLinkService {
     }
 
     @Transactional(readOnly = true)
-    public java.util.Optional<Customer> resolveCurrentCustomer(Long authUserId, String email) {
+    public Optional<Customer> resolveCurrentCustomer(Long authUserId, String email) {
         if (authUserId != null) {
             var byAuthUserId = customerRepository.findByAuthUserId(authUserId);
             if (byAuthUserId.isPresent()) {
@@ -35,7 +35,7 @@ public class CustomerIdentityLinkService {
         }
         String normalizedEmail = normalizeEmail(email);
         if (normalizedEmail == null) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         return customerRepository.findByEmail(normalizedEmail);
     }
@@ -57,7 +57,7 @@ public class CustomerIdentityLinkService {
                 .firstName(normalizeRequiredText(payload.firstName()))
                 .lastName(normalizeRequiredText(payload.lastName()))
                 .email(normalizedEmail)
-                .phoneNumber(normalizedPhone)
+                .phoneNumber(normalizeRequiredPhone(payload.phoneNumber()))
                 .authUserId(payload.authUserId())
                 .emailVerified(payload.emailVerified())
                 .build();
@@ -72,6 +72,7 @@ public class CustomerIdentityLinkService {
                 return updateFromAuth(byAuthUserId.get(), auth);
             }
         }
+
         String normalizedEmail = normalizeRequiredEmail(auth.getEmail());
         var byEmail = customerRepository.findByEmail(normalizedEmail);
         if (byEmail.isPresent()) {
@@ -96,12 +97,12 @@ public class CustomerIdentityLinkService {
         if (customerRepository.existsByEmail(normalizedEmail)) {
             throw new CustomerConflictException("Customer with email '%s' already exists".formatted(normalizedEmail));
         }
-
-        String requiredPhone = normalizedPhone != null ? normalizedPhone : normalizeRequiredPhone(auth.getPhoneNumber());
+        String requiredPhone = normalizedPhone != null
+                ? normalizedPhone
+                : normalizeRequiredPhone(auth.getPhoneNumber());
         if (customerRepository.existsByPhoneNumber(requiredPhone)) {
             throw new CustomerConflictException("Customer with phone number '%s' already exists".formatted(requiredPhone));
         }
-
         Customer customer = Customer.builder()
                 .firstName(resolveName(auth.getFirstName(), normalizedEmail, true))
                 .lastName(resolveName(auth.getLastName(), normalizedEmail, false))
@@ -176,41 +177,53 @@ public class CustomerIdentityLinkService {
     private String normalizeRequiredEmail(String email) {
         String normalized = normalizeEmail(email);
         if (normalized == null) {
-            throw new IllegalArgumentException("Email must not be blank");
+            throw new CustomerAuthLinkageException("Authenticated customer email is missing");
         }
         return normalized;
-    }
-
-    private String normalizeRequiredPhone(String phone) {
-        String normalized = normalizeRequiredText(phone);
-        return normalized;
-    }
-
-    private String normalizePhone(String phone) {
-        if (phone == null || phone.trim().isEmpty()) {
-            return null;
-        }
-        return phone.trim();
-    }
-
-    private String normalizeRequiredText(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("Value must not be blank");
-        }
-        return value.trim();
     }
 
     private String normalizeEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
+        if (email == null) {
             return null;
         }
-        return email.trim().toLowerCase(Locale.ROOT);
+        String normalized = email.trim().toLowerCase(Locale.ROOT);
+        return normalized.isBlank() ? null : normalized;
     }
 
-    public record CustomerRegisterPayload(Long authUserId,
-                                          String email,
-                                          String phoneNumber,
-                                          String firstName,
-                                          String lastName,
-                                          boolean emailVerified) {}
+    private String normalizeRequiredPhone(String phoneNumber) {
+        String normalized = normalizePhone(phoneNumber);
+        if (normalized == null) {
+            throw new CustomerAuthLinkageException("Authenticated customer phone number is missing");
+        }
+        return normalized;
+    }
+
+    private String normalizePhone(String phoneNumber) {
+        if (phoneNumber == null) {
+            return null;
+        }
+        String normalized = phoneNumber.trim();
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private String normalizeRequiredText(String value) {
+        if (value == null) {
+            throw new CustomerAuthLinkageException("Authenticated customer profile data is incomplete");
+        }
+        String normalized = value.trim();
+        if (normalized.isBlank()) {
+            throw new CustomerAuthLinkageException("Authenticated customer profile data is incomplete");
+        }
+        return normalized;
+    }
+
+    public record CustomerRegisterPayload(
+            Long authUserId,
+            String email,
+            String phoneNumber,
+            String firstName,
+            String lastName,
+            boolean emailVerified
+    ) {
+    }
 }

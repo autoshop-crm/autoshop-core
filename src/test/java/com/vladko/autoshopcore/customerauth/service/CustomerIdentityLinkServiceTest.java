@@ -4,8 +4,10 @@ import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.client.exception.CustomerConflictException;
 import com.vladko.autoshopcore.client.repository.CustomerRepository;
 import com.vladko.autoshopcore.customerauth.dto.CustomerAuthTokensDTO;
+import com.vladko.autoshopcore.customerauth.exception.CustomerAuthLinkageException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,6 +17,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,9 +76,10 @@ class CustomerIdentityLinkServiceTest {
                 .lastName("Customer")
                 .build();
 
-        when(customerRepository.findByAuthUserId(44L)).thenReturn(Optional.empty(), Optional.empty());
-        when(customerRepository.findByEmail("client@test.com")).thenReturn(Optional.empty(), Optional.empty());
+        when(customerRepository.findByAuthUserId(44L)).thenReturn(Optional.empty());
+        when(customerRepository.findByEmail("client@test.com")).thenReturn(Optional.empty());
         when(customerRepository.findByPhoneNumber("+79990001122")).thenReturn(Optional.of(existing), Optional.of(existing));
+        when(customerRepository.findByAuthUserId(44L)).thenReturn(Optional.empty(), Optional.empty());
         when(customerRepository.save(existing)).thenReturn(existing);
 
         Customer customer = customerIdentityLinkService.ensureLinkedCustomer(auth);
@@ -110,5 +114,29 @@ class CustomerIdentityLinkServiceTest {
         assertThatThrownBy(() -> customerIdentityLinkService.ensureLinkedCustomer(auth))
                 .isInstanceOf(CustomerConflictException.class)
                 .hasMessage("Customer with email 'client@test.com' already exists");
+    }
+
+    @Test
+    void ensureLinkedCustomerUsesFallbackNamesWhenAuthNamesAreMissing() {
+        CustomerAuthTokensDTO auth = CustomerAuthTokensDTO.builder()
+                .authUserId(44L)
+                .email("ab@test.com")
+                .phoneNumber("+79990001122")
+                .emailVerified(false)
+                .build();
+
+        when(customerRepository.findByAuthUserId(44L)).thenReturn(Optional.empty());
+        when(customerRepository.findByEmail("ab@test.com")).thenReturn(Optional.empty());
+        when(customerRepository.findByPhoneNumber("+79990001122")).thenReturn(Optional.empty());
+        when(customerRepository.existsByAuthUserId(44L)).thenReturn(false);
+        when(customerRepository.existsByEmail("ab@test.com")).thenReturn(false);
+        when(customerRepository.existsByPhoneNumber("+79990001122")).thenReturn(false);
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Customer customer = customerIdentityLinkService.ensureLinkedCustomer(auth);
+
+        assertThat(customer.getFirstName()).isEqualTo("ab");
+        assertThat(customer.getLastName()).isEqualTo("Customer");
+        assertThat(customer.getEmailVerified()).isFalse();
     }
 }
