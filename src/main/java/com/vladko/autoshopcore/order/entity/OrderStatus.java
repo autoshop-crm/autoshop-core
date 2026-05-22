@@ -1,0 +1,19 @@
+package com.vladko.autoshopcore.order.entity;
+
+public enum OrderStatus {
+    NEW,
+    IN_PROGRESS,
+    COMPLETED,
+    CANCELLED,
+    WAITING_FOR_VISIT,
+    ACCEPTED,
+    DIAGNOSIS_IN_PROGRESS,
+    WAITING_FOR_OWNER_APPROVAL,
+    WAITING_FOR_PART,
+    REPAIR_IN_PROGRESS,
+    READY_FOR_OWNER,
+    HANDED_OVER,
+    CANCELLED_NO_SHOW,
+    CANCELLED_BY_CUSTOMER,
+    CANCELLED_INTERNAL
+}

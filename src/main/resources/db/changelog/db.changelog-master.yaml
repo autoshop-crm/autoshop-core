@@ -1,4 +1,29 @@
 databaseChangeLog:
   - include:
       file: db/changelog/db.changelog-1.0.sql
-
+  - include:
+      file: db/changelog/db.changelog-1.1-vehicle-normalization.sql
+  - include:
+      file: db/changelog/db.changelog-1.2-order-normalization.sql
+  - include:
+      file: db/changelog/db.changelog-1.3-parts-module.sql
+  - include:
+      file: db/changelog/db.changelog-1.4-loyalty-module.sql
+  - include:
+      file: db/changelog/db.changelog-1.5-vehicle-umapi-catalog.sql
+  - include:
+      file: db/changelog/db.changelog-1.6-employee-directory.sql
+  - include:
+      file: db/changelog/db.changelog-1.7-order-requested-parts.sql
+  - include:
+      file: db/changelog/db.changelog-1.8-crm-booking-and-service-catalog.sql
+  - include:
+      file: db/changelog/db.changelog-1.9-crm-approval-and-parts-lifecycle.sql
+  - include:
+      file: db/changelog/db.changelog-2.0-crm-roles-timeline-notifications.sql
+  - include:
+      file: db/changelog/db.changelog-2.1-crm-loyalty-query-readmodels.sql
+  - include:
+      file: db/changelog/db.changelog-2.2-booking-channel-simplification.sql
+  - include:
+      file: db/changelog/db.changelog-2.3-orders-status-column-length.sql

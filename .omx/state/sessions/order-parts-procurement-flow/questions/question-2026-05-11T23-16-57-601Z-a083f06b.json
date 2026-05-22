@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-16-57-601Z-a083f06b",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:16:57.601Z",
+  "updated_at": "2026-05-11T23:16:57.621Z",
+  "status": "prompting",
+  "header": "Round 5",
+  "question": "Когда менеджер нажал закупку и цена из Carreta зафиксировалась, что именно должно измениться в заказе немедленно, ещё до фактического прихода на склад?",
+  "options": [
+    {
+      "label": "Только цена и статус",
+      "value": "price-and-status-only",
+      "description": "В заказе меняются только lifecycle-статус детали и зафиксированная цена для сметы."
+    },
+    {
+      "label": "Цена, статус и смета",
+      "value": "price-status-estimate",
+      "description": "Кроме статуса, сразу пересчитывается финансовая часть заказа/сметы и все видят новую стоимость."
+    },
+    {
+      "label": "Полный переход",
+      "value": "full-transition",
+      "description": "Деталь сразу считается управленчески проведённой: статус, смета, закупочный след и готовность к дальнейшему складскому учёту."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой вариант",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-16-57-601",
+    "launched_at": "2026-05-11T23:16:57.605Z"
+  }
+}

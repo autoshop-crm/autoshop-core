@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-15-29-470Z-d522fbab",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:15:29.470Z",
+  "updated_at": "2026-05-11T23:15:29.490Z",
+  "status": "prompting",
+  "header": "Round 4",
+  "question": "В какой момент цена детали должна считаться зафиксированной для сметы заказа?",
+  "options": [
+    {
+      "label": "При выборе quote",
+      "value": "on-quote-selected",
+      "description": "Как только менеджер выбрал предложение/цену, она фиксируется в заказе, даже если деталь ещё едет."
+    },
+    {
+      "label": "При создании закупки",
+      "value": "on-purchase-created",
+      "description": "Цена фиксируется только когда менеджер оформил закупку через Carreta/поставщика."
+    },
+    {
+      "label": "При приходе на склад",
+      "value": "on-receipt",
+      "description": "До фактического прихода цена предварительная, окончательно фиксируется только при receipt."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой момент фиксации",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-15-29-470",
+    "launched_at": "2026-05-11T23:15:29.475Z"
+  }
+}

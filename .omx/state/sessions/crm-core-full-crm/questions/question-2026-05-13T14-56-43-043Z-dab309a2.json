@@ -1,0 +1,42 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-13T14-56-43-043Z-dab309a2",
+  "session_id": "crm-core-full-crm",
+  "created_at": "2026-05-13T14:56:43.043Z",
+  "updated_at": "2026-05-13T14:56:43.060Z",
+  "status": "prompting",
+  "header": "Round 4",
+  "question": "Round 4 | Target: decision-boundary | Ambiguity: 49%\n\nКлючевой архитектурный выбор для flow: в какой именно момент должен появляться `Order`? Выбери ближайший к твоему ожиданию вариант. Это не про технику, а про бизнес-смысл процесса.",
+  "options": [
+    {
+      "label": "Order создаётся сразу при записи",
+      "value": "order_on_appointment",
+      "description": "Запись клиента уже считается заказом, просто сначала он в плановом состоянии."
+    },
+    {
+      "label": "Order создаётся при фактическом приезде",
+      "value": "order_on_checkin",
+      "description": "До приезда есть только запись/appointment, а заказ рождается в момент приёмки машины."
+    },
+    {
+      "label": "Order создаётся после первичного осмотра",
+      "value": "order_after_inspection",
+      "description": "Сначала запись и визит, потом после диагностики создаётся заказ на работы."
+    },
+    {
+      "label": "Не уверен, предложи лучший вариант",
+      "value": "recommend",
+      "description": "Ты на основе анализа предложишь целевой flow и обоснуешь его."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой вариант",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-13T14-56-43-043",
+    "launched_at": "2026-05-13T14:56:43.046Z"
+  }
+}

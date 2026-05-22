@@ -1,0 +1,132 @@
+{
+  "records": [
+    {
+      "request_id": "4f4f6c5a-c0d8-4b69-836b-c51471a8a3dc",
+      "target": "worker-1",
+      "status": "failed",
+      "created_at": "2026-05-13T16:13:17.387Z",
+      "notified_at": "2026-05-13T16:13:18.132Z",
+      "delivered_at": null,
+      "failed_at": "2026-05-13T16:13:32.539Z",
+      "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+      "metadata": {
+        "kind": "inbox",
+        "team_name": "execute-phases-1b-5-from-conte",
+        "worker_index": 1,
+        "pane_id": "%22",
+        "trigger_message": "Read $OMX_TEAM_STATE_ROOT/team/execute-phases-1b-5-from-conte/workers/worker-1/inbox.md, work now, report progress, continue assigned work or next feasible task.",
+        "inbox_correlation_key": "startup:worker-1",
+        "transport_preference": "hook_preferred_with_fallback",
+        "fallback_allowed": true,
+        "attempt_count": 2
+      }
+    },
+    {
+      "request_id": "733d45c7-204d-4838-a2a8-f160d831172f",
+      "target": "worker-1",
+      "status": "failed",
+      "created_at": "2026-05-13T16:13:35.549Z",
+      "notified_at": null,
+      "delivered_at": null,
+      "failed_at": "2026-05-13T16:13:47.368Z",
+      "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+      "metadata": {
+        "kind": "inbox",
+        "team_name": "execute-phases-1b-5-from-conte",
+        "worker_index": 1,
+        "pane_id": "%22",
+        "trigger_message": "Read $OMX_TEAM_STATE_ROOT/team/execute-phases-1b-5-from-conte/workers/worker-1/inbox.md, work now, report progress, continue assigned work or next feasible task.",
+        "inbox_correlation_key": "startup:worker-1",
+        "transport_preference": "hook_preferred_with_fallback",
+        "fallback_allowed": true,
+        "attempt_count": 1
+      }
+    },
+    {
+      "request_id": "5ba4e9f7-62fe-4a9e-91f0-58fb7c771777",
+      "target": "worker-1",
+      "status": "failed",
+      "created_at": "2026-05-13T16:13:50.408Z",
+      "notified_at": null,
+      "delivered_at": null,
+      "failed_at": "2026-05-13T16:14:02.057Z",
+      "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+      "metadata": {
+        "kind": "inbox",
+        "team_name": "execute-phases-1b-5-from-conte",
+        "worker_index": 1,
+        "pane_id": "%22",
+        "trigger_message": "Read $OMX_TEAM_STATE_ROOT/team/execute-phases-1b-5-from-conte/workers/worker-1/inbox.md, work now, report progress, continue assigned work or next feasible task.",
+        "inbox_correlation_key": "startup:worker-1",
+        "transport_preference": "hook_preferred_with_fallback",
+        "fallback_allowed": true,
+        "attempt_count": 1
+      }
+    },
+    {
+      "request_id": "e19db713-32ef-4f85-9de5-6a0afb6d2887",
+      "target": "worker-2",
+      "status": "failed",
+      "created_at": "2026-05-13T16:14:02.097Z",
+      "notified_at": "2026-05-13T16:14:02.918Z",
+      "delivered_at": null,
+      "failed_at": "2026-05-13T16:14:17.944Z",
+      "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+      "metadata": {
+        "kind": "inbox",
+        "team_name": "execute-phases-1b-5-from-conte",
+        "worker_index": 2,
+        "pane_id": "%23",
+        "trigger_message": "Read $OMX_TEAM_STATE_ROOT/team/execute-phases-1b-5-from-conte/workers/worker-2/inbox.md, work now, report progress, continue assigned work or next feasible task.",
+        "inbox_correlation_key": "startup:worker-2",
+        "transport_preference": "hook_preferred_with_fallback",
+        "fallback_allowed": true,
+        "attempt_count": 2
+      }
+    },
+    {
+      "request_id": "301a07d5-e58a-49ed-93e3-b927deb0fd11",
+      "target": "worker-2",
+      "status": "failed",
+      "created_at": "2026-05-13T16:14:21.000Z",
+      "notified_at": null,
+      "delivered_at": null,
+      "failed_at": "2026-05-13T16:14:32.869Z",
+      "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+      "metadata": {
+        "kind": "inbox",
+        "team_name": "execute-phases-1b-5-from-conte",
+        "worker_index": 2,
+        "pane_id": "%23",
+        "trigger_message": "Read $OMX_TEAM_STATE_ROOT/team/execute-phases-1b-5-from-conte/workers/worker-2/inbox.md, work now, report progress, continue assigned work or next feasible task.",
+        "intent": "followup-relaunch",
+        "inbox_correlation_key": "startup:worker-2",
+        "transport_preference": "hook_preferred_with_fallback",
+        "fallback_allowed": true,
+        "attempt_count": 1
+      }
+    },
+    {
+      "request_id": "d6e6b676-a928-4887-8176-c657e1464357",
+      "target": "worker-2",
+      "status": "failed",
+      "created_at": "2026-05-13T16:14:35.891Z",
+      "notified_at": null,
+      "delivered_at": null,
+      "failed_at": "2026-05-13T16:14:47.920Z",
+      "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+      "metadata": {
+        "kind": "inbox",
+        "team_name": "execute-phases-1b-5-from-conte",
+        "worker_index": 2,
+        "pane_id": "%23",
+        "trigger_message": "Read $OMX_TEAM_STATE_ROOT/team/execute-phases-1b-5-from-conte/workers/worker-2/inbox.md, work now, report progress, continue assigned work or next feasible task.",
+        "intent": "followup-relaunch",
+        "inbox_correlation_key": "startup:worker-2",
+        "transport_preference": "hook_preferred_with_fallback",
+        "fallback_allowed": true,
+        "attempt_count": 1
+      }
+    }
+  ]
+}

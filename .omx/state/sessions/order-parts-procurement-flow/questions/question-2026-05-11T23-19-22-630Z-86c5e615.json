@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-19-22-630Z-86c5e615",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:19:22.630Z",
+  "updated_at": "2026-05-11T23:19:22.646Z",
+  "status": "prompting",
+  "header": "Round 7",
+  "question": "Что из нижнего точно НЕ входит в первую реализацию backend flow и должно быть явным non-goal?",
+  "options": [
+    {
+      "label": "Автовыбор лучшей цены",
+      "value": "no-auto-quote-selection",
+      "description": "Не делаем автоматическое сравнение и автоподбор quote."
+    },
+    {
+      "label": "Частичная поставка",
+      "value": "no-partial-receipt",
+      "description": "Не поддерживаем сценарии, когда пришла только часть количества детали."
+    },
+    {
+      "label": "Отмена/возврат закупки",
+      "value": "no-purchase-cancel-return",
+      "description": "Не делаем сложный lifecycle отмены заказа поставщику и возврата детали."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Добавить ещё non-goal",
+  "multi_select": true,
+  "type": "multi-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-19-22-630",
+    "launched_at": "2026-05-11T23:19:22.634Z"
+  }
+}

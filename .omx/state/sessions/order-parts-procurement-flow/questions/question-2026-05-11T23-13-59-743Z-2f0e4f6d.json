@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-13-59-743Z-2f0e4f6d",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:13:59.743Z",
+  "updated_at": "2026-05-11T23:13:59.765Z",
+  "status": "prompting",
+  "header": "Round 3",
+  "question": "Для детали, которой нет на складе, какой минимальный набор статусов ты хочешь зафиксировать в backend как обязательный lifecycle?",
+  "options": [
+    {
+      "label": "3 статуса",
+      "value": "three-statuses",
+      "description": "Например: NEEDS_PURCHASE -> ORDERED -> IN_STOCK_OR_RECEIVED."
+    },
+    {
+      "label": "4 статуса",
+      "value": "four-statuses",
+      "description": "Например: NEEDS_PURCHASE -> QUOTE_SELECTED -> ORDERED -> RECEIVED."
+    },
+    {
+      "label": "5+ статусов",
+      "value": "five-plus",
+      "description": "Нужен более детальный lifecycle с промежуточными управленческими состояниями."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой набор статусов",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-13-59-743",
+    "launched_at": "2026-05-11T23:13:59.749Z"
+  }
+}

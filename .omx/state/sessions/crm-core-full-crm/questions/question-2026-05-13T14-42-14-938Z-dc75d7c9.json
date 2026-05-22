@@ -1,0 +1,21 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-13T14-42-14-938Z-dc75d7c9",
+  "session_id": "crm-core-full-crm",
+  "created_at": "2026-05-13T14:42:14.938Z",
+  "updated_at": "2026-05-13T14:42:15.071Z",
+  "status": "prompting",
+  "header": "Round 1",
+  "question": "Round 1 | Target: intent | Ambiguity: 100%\n\nЕсли через 3–6 месяцев сказать, что Core действительно стал полноценной CRM, какой один главный бизнес-результат должен стать правдой? Не перечисляй функции — опиши изменившийся операционный процесс от первого контакта клиента до завершения обслуживания.",
+  "options": [],
+  "allow_other": true,
+  "other_label": "Ответ",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-13T14-42-14-938",
+    "launched_at": "2026-05-13T14:42:14.950Z"
+  }
+}

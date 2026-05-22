@@ -1,0 +1,6 @@
+{
+  "state": "unknown",
+  "current_task_id": "1",
+  "reason": "codex_startup_no_evidence_after_fallback:tmux_send_keys_sent",
+  "updated_at": "2026-05-13T16:14:02.085Z"
+}

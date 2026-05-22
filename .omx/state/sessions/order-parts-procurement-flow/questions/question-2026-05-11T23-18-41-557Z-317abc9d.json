@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-18-41-557Z-317abc9d",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:18:41.557Z",
+  "updated_at": "2026-05-11T23:18:41.580Z",
+  "status": "prompting",
+  "header": "Round 6",
+  "question": "Если Carreta вернёт несколько предложений на одну и ту же деталь, как backend должен определить, какое из них фиксировать при переводе в статус `заказано`?",
+  "options": [
+    {
+      "label": "Менеджер выбирает вручную",
+      "value": "manager-picks-quote",
+      "description": "Backend сначала отдаёт список quote, а менеджер явно выбирает одно предложение перед фиксацией цены."
+    },
+    {
+      "label": "Backend выбирает сам",
+      "value": "backend-auto-picks",
+      "description": "Нужны правила автоматического выбора лучшего quote без дополнительного решения менеджера."
+    },
+    {
+      "label": "Один quote достаточно",
+      "value": "single-quote-only",
+      "description": "Считаем, что для MVP работаем так, будто Carreta даёт один релевантный вариант или frontend показывает только один."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой вариант",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-18-41-557",
+    "launched_at": "2026-05-11T23:18:41.566Z"
+  }
+}

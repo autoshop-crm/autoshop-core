@@ -1,0 +1,57 @@
+spring.config.activate.on-profile=local
+
+# Local infrastructure
+spring.datasource.url=jdbc:postgresql://localhost:5433/postgres
+spring.datasource.username=autoshop-admin
+spring.datasource.password=pass
+
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+
+spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+
+app.kafka.order-events-topic=autoshop.order-events
+app.events.source=autoshop-core
+app.events.version=1
+app.events.order-notifications-enabled=true
+
+app.minio.url=http://localhost:9000
+app.minio.access-key=minioadmin
+app.minio.secret-key=minioadmin
+
+spring.mail.host=localhost
+spring.mail.port=1025
+
+# AuthService integration
+app.auth.base-url=http://localhost:8082
+app.auth.validate-path=/api/auth/validate
+app.auth.connect-timeout=1s
+app.auth.read-timeout=2s
+app.auth.enabled=true
+
+# External API credentials
+# Keep real keys only in src/main/resources/application-local.properties or env vars.
+app.umapi.api-key=
+app.carreta.api-key=
+
+# UMAPI catalog integration
+app.umapi.base-url=https://api.umapi.ru
+app.umapi.language-code=ru
+app.umapi.region-code=WWW
+app.umapi.connect-timeout=2s
+app.umapi.read-timeout=5s
+app.umapi.cache.search-ttl=6h
+app.umapi.retry.max-attempts=3
+app.umapi.retry.backoff=500ms
+
+# Carreta supplier integration
+app.carreta.base-url=https://api.carreta.ru
+app.carreta.account=
+app.carreta.test-orders-enabled=true
+app.carreta.connect-timeout=2s
+app.carreta.read-timeout=5s
+app.carreta.cache.search-ttl=30m
+app.carreta.retry.max-attempts=3
+app.carreta.retry.backoff=500ms

@@ -1,0 +1,29 @@
+# Context Snapshot
+
+- Task statement: Провести deep interview и собрать весь контекст для подробного backend-плана реализации flow: механик ищет аналоги, добавляет нужные детали без цены; менеджер получает Carreta quotes, закупает, фиксирует цену в смете, помечает приход на склад.
+- Desired outcome: execution-ready spec и подробный план для backend, на который потом можно опереться при реализации frontend.
+- Stated solution: нужен новый flow для деталей заказа, закупки и прихода на склад.
+- Probable intent hypothesis: разделить механику подбора деталей и менеджерскую закупку/ценообразование, сохранив понятный lifecycle детали в заказе.
+- Known facts/evidence:
+  - UMAPI уже ищет аналоги.
+  - Carreta уже даёт quotes и умеет создавать purchase order.
+  - OrderPartItem сейчас работает только с локальным Part и ценой part.cost.
+  - Unified parts search уже добавлен для локальный+внешний список.
+- Constraints:
+  - brownfield Spring backend.
+  - Нужен подробный план, не прямая реализация в этом режиме.
+  - Потом пользователь сам будет реализовывать frontend.
+- Unknowns/open questions:
+  - точная доменная модель requested/requested+ordered+received part.
+  - как фиксируется цена в смете и на каком этапе она становится окончательной.
+  - какие роли и действия разрешены на каждом шаге.
+  - нужен ли split между local stock item и purchase-request item.
+- Decision-boundary unknowns:
+  - можем ли мы вводить новую сущность для заказных деталей.
+  - считать ли `OrderPartItem` только складской сущностью.
+  - нужен ли hard separation between mechanic and manager actions.
+- Likely codebase touchpoints:
+  - parts/
+  - procurement/
+  - order/
+  - security/

@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.entities;
 
+import com.vladko.autoshopcore.shared.entities.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,7 +18,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 @Entity
-public class Employee {
+public class Employee implements BaseEntity<Integer> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -32,7 +33,10 @@ public class Employee {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
-    @Size(max = 20)
+    @Size(max = 100)
+    @Column(name = "email", unique = true, length = 100)
+    private String email;
+
     @NotNull
     @Column(name = "function", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
@@ -41,4 +45,11 @@ public class Employee {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @PrePersist
+    private void prePersist() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 }

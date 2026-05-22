@@ -1,0 +1,32 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-11-45-350Z-b161e06c",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:11:45.350Z",
+  "updated_at": "2026-05-11T23:11:45.386Z",
+  "status": "prompting",
+  "header": "Round 2",
+  "question": "Сейчас самое важное уточнение границы модели: если точное совпадение детали уже есть на локальном складе, механик должен добавлять её в заказ как обычную складскую позицию с резервом, или все детали заказа должны идти через один и тот же lifecycle-объект со статусами, даже если деталь уже есть в наличии?",
+  "options": [
+    {
+      "label": "Резерв со склада",
+      "value": "reserve-stock",
+      "description": "Если деталь уже есть локально, используем текущую складскую механику и не заводим ей закупочный lifecycle."
+    },
+    {
+      "label": "Единый lifecycle",
+      "value": "single-lifecycle",
+      "description": "Даже складская деталь должна идти через общий объект заказа и статусы lifecycle."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Другой вариант",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-11-45-350",
+    "launched_at": "2026-05-11T23:11:45.356Z"
+  }
+}

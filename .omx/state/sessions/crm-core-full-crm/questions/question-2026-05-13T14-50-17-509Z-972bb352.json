@@ -1,0 +1,21 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-13T14-50-17-509Z-972bb352",
+  "session_id": "crm-core-full-crm",
+  "created_at": "2026-05-13T14:50:17.509Z",
+  "updated_at": "2026-05-13T14:50:17.523Z",
+  "status": "prompting",
+  "header": "Round 2",
+  "question": "Round 2 | Target: scope | Ambiguity: 72%\n\nТы описал CRM довольно широко: запись, статусы обслуживания, склад, заказ деталей, лояльность, роли. Где ты хочешь провести жёсткую границу первого релиза Core как CRM? Что обязательно входит в Phase 1, а что точно можно отложить на потом без ощущения, что CRM провалилась?",
+  "options": [],
+  "allow_other": true,
+  "other_label": "Ответ",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-13T14-50-17-509",
+    "launched_at": "2026-05-13T14:50:17.514Z"
+  }
+}

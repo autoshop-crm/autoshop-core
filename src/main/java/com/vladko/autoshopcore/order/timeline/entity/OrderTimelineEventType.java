@@ -1,0 +1,17 @@
+package com.vladko.autoshopcore.order.timeline.entity;
+
+public enum OrderTimelineEventType {
+    ORDER_BOOKED,
+    VEHICLE_CHECKED_IN,
+    APPROVAL_REQUESTED,
+    APPROVAL_APPROVED,
+    APPROVAL_REJECTED,
+    WAITING_FOR_PART_ENTERED,
+    PART_ORDERED,
+    PART_RECEIVED,
+    REPAIR_RESUMED,
+    READY_FOR_OWNER_MARKED,
+    ORDER_CANCELLED,
+    VEHICLE_HANDED_OVER,
+    STATUS_CHANGED
+}

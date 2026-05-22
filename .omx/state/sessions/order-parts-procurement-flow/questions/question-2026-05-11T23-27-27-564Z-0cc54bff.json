@@ -1,0 +1,37 @@
+{
+  "kind": "omx.question/v1",
+  "question_id": "question-2026-05-11T23-27-27-564Z-0cc54bff",
+  "session_id": "order-parts-procurement-flow",
+  "created_at": "2026-05-11T23:27:27.564Z",
+  "updated_at": "2026-05-11T23:27:27.585Z",
+  "status": "prompting",
+  "header": "Round 9",
+  "question": "Нужно зафиксировать pressure-pass по самой рискованной части: когда одинаковые детали с одинаковым артикулом, но разной историей, после прихода визуально объединяются — backend должен физически объединять их в одну запись заказа, или это только правило отображения на frontend, а в базе они могут остаться разными строками?",
+  "options": [
+    {
+      "label": "Только UI-агрегация",
+      "value": "ui-aggregation-only",
+      "description": "В базе остаются отдельные строки/сущности, а frontend объединяет их для показа."
+    },
+    {
+      "label": "Backend физически объединяет",
+      "value": "backend-merge",
+      "description": "После receipt backend схлопывает одинаковые позиции в одну запись заказа с общим количеством."
+    },
+    {
+      "label": "Backend решает сам",
+      "value": "backend-decides-representation",
+      "description": "Можно выбрать внутреннюю модель свободно, если пользователь видит единое поведение."
+    }
+  ],
+  "allow_other": true,
+  "other_label": "Свой вариант",
+  "multi_select": false,
+  "type": "single-answerable",
+  "source": "deep-interview",
+  "renderer": {
+    "renderer": "tmux-session",
+    "target": "omx-question-question-2026-05-11T23-27-27-564",
+    "launched_at": "2026-05-11T23:27:27.570Z"
+  }
+}

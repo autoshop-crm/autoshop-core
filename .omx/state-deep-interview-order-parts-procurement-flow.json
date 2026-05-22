@@ -1,0 +1,21 @@
+{
+  "active": true,
+  "current_phase": "deep-interview",
+  "state": {
+    "profile": "standard",
+    "type": "brownfield",
+    "current_ambiguity": 0.78,
+    "threshold": 0.20,
+    "round": 1,
+    "current_stage": "intent-first",
+    "current_focus": "scope",
+    "context_snapshot_path": ".omx/context/order-parts-procurement-flow-20260511T230752Z.md",
+    "rounds": [
+      {
+        "round": 1,
+        "target": "intent",
+        "answer_summary": "Деталь сразу создается как часть заказа, но без цены и без наличия на складе; менеджер управляет закупкой, доставкой и складским статусом."
+      }
+    ]
+  }
+}
