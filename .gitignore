@@ -43,7 +43,7 @@ out/
 .env
 .env.local
 .env.*.local
-src/main/resources/application-local.properties
+config/application-local-secrets.properties
 src/main/resources/application-*.local.properties
 src/main/resources/application-secrets.properties
 src/main/resources/application-*.secrets.properties
