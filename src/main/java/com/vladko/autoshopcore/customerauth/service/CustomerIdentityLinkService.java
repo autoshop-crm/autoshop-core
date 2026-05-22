@@ -73,21 +73,79 @@ public class CustomerIdentityLinkService {
             }
         }
         String normalizedEmail = normalizeRequiredEmail(auth.getEmail());
-        Customer customer = customerRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new CustomerAuthLinkageException(
-                        "Authenticated customer '%s' is not linked to local profile".formatted(normalizedEmail)
-                ));
-        return updateFromAuth(customer, auth);
+        var byEmail = customerRepository.findByEmail(normalizedEmail);
+        if (byEmail.isPresent()) {
+            return updateFromAuth(byEmail.get(), auth);
+        }
+
+        String normalizedPhone = normalizePhone(auth.getPhoneNumber());
+        if (normalizedPhone != null) {
+            var byPhone = customerRepository.findByPhoneNumber(normalizedPhone);
+            if (byPhone.isPresent()) {
+                return updateFromAuth(byPhone.get(), auth);
+            }
+        }
+
+        return createFromAuth(auth, normalizedEmail, normalizedPhone);
+    }
+
+    private Customer createFromAuth(CustomerAuthTokensDTO auth, String normalizedEmail, String normalizedPhone) {
+        if (auth.getAuthUserId() != null && customerRepository.existsByAuthUserId(auth.getAuthUserId())) {
+            throw new CustomerAuthLinkageException("Auth user is already linked to another customer");
+        }
+        if (customerRepository.existsByEmail(normalizedEmail)) {
+            throw new CustomerConflictException("Customer with email '%s' already exists".formatted(normalizedEmail));
+        }
+
+        String requiredPhone = normalizedPhone != null ? normalizedPhone : normalizeRequiredPhone(auth.getPhoneNumber());
+        if (customerRepository.existsByPhoneNumber(requiredPhone)) {
+            throw new CustomerConflictException("Customer with phone number '%s' already exists".formatted(requiredPhone));
+        }
+
+        Customer customer = Customer.builder()
+                .firstName(resolveName(auth.getFirstName(), normalizedEmail, true))
+                .lastName(resolveName(auth.getLastName(), normalizedEmail, false))
+                .email(normalizedEmail)
+                .phoneNumber(requiredPhone)
+                .authUserId(auth.getAuthUserId())
+                .emailVerified(auth.isEmailVerified())
+                .build();
+        return customerRepository.save(customer);
     }
 
     private Customer updateFromAuth(Customer customer, CustomerAuthTokensDTO auth) {
         if (customer.getAuthUserId() != null && auth.getAuthUserId() != null && !customer.getAuthUserId().equals(auth.getAuthUserId())) {
             throw new CustomerAuthLinkageException("Customer is already linked to another auth user");
         }
+
+        String normalizedEmail = normalizeRequiredEmail(auth.getEmail());
+        customerRepository.findByEmail(normalizedEmail)
+                .filter(other -> !other.getId().equals(customer.getId()))
+                .ifPresent(other -> {
+                    throw new CustomerConflictException("Customer with email '%s' already exists".formatted(normalizedEmail));
+                });
+
+        String normalizedPhone = normalizePhone(auth.getPhoneNumber());
+        if (normalizedPhone != null) {
+            customerRepository.findByPhoneNumber(normalizedPhone)
+                    .filter(other -> !other.getId().equals(customer.getId()))
+                    .ifPresent(other -> {
+                        throw new CustomerConflictException("Customer with phone number '%s' already exists".formatted(normalizedPhone));
+                    });
+        }
+
+        if (auth.getAuthUserId() != null) {
+            customerRepository.findByAuthUserId(auth.getAuthUserId())
+                    .filter(other -> !other.getId().equals(customer.getId()))
+                    .ifPresent(other -> {
+                        throw new CustomerAuthLinkageException("Auth user is already linked to another customer");
+                    });
+        }
+
         customer.setAuthUserId(auth.getAuthUserId());
-        customer.setEmail(normalizeRequiredEmail(auth.getEmail()));
-        if (auth.getPhoneNumber() != null && !auth.getPhoneNumber().isBlank()) {
-            customer.setPhoneNumber(normalizeRequiredPhone(auth.getPhoneNumber()));
+        customer.setEmail(normalizedEmail);
+        if (normalizedPhone != null) {
+            customer.setPhoneNumber(normalizedPhone);
         }
         if (auth.getFirstName() != null && !auth.getFirstName().isBlank()) {
             customer.setFirstName(normalizeRequiredText(auth.getFirstName()));
@@ -97,6 +155,22 @@ public class CustomerIdentityLinkService {
         }
         customer.setEmailVerified(auth.isEmailVerified());
         return customerRepository.save(customer);
+    }
+
+    private String resolveName(String value, String normalizedEmail, boolean firstName) {
+        if (value != null && !value.isBlank()) {
+            return normalizeRequiredText(value);
+        }
+        return firstName ? fallbackFirstName(normalizedEmail) : "Customer";
+    }
+
+    private String fallbackFirstName(String normalizedEmail) {
+        String localPart = normalizedEmail.split("@", 2)[0];
+        String cleaned = localPart.replaceAll("[^A-Za-zА-Яа-я0-9]", " ").trim();
+        if (cleaned.length() >= 2) {
+            return normalizeRequiredText(cleaned);
+        }
+        return "Auto";
     }
 
     private String normalizeRequiredEmail(String email) {
@@ -110,6 +184,13 @@ public class CustomerIdentityLinkService {
     private String normalizeRequiredPhone(String phone) {
         String normalized = normalizeRequiredText(phone);
         return normalized;
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return null;
+        }
+        return phone.trim();
     }
 
     private String normalizeRequiredText(String value) {
