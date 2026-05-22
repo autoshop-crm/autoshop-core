@@ -61,6 +61,15 @@ public class SecurityConfiguration {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/internal/employees/sync").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/customer-auth/register",
+                                "/api/customer-auth/login",
+                                "/api/customer-auth/refresh",
+                                "/api/customer-auth/logout",
+                                "/api/customer-auth/password/forgot",
+                                "/api/customer-auth/password/reset",
+                                "/api/customer-auth/email/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/customer-auth/me").hasRole("CUSTOMER")
 
                         .requestMatchers(HttpMethod.POST, "/api/procurement/purchase-orders").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.POST, "/api/procurement/stock-receipts").hasAnyRole("ADMIN", "MANAGER")
@@ -84,14 +93,45 @@ public class SecurityConfiguration {
 
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/assign").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*/estimate").hasAnyRole("ADMIN", "MANAGER", "MECHANIC")
-                        .requestMatchers(HttpMethod.PUT, "/api/orders/*/status").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/*/status").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC", "CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/orders/*/timeline/customer").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC", "CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/orders/*/timeline").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
                         .requestMatchers(HttpMethod.GET, "/api/orders/my").hasRole("MECHANIC")
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC", "CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/*").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC", "CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST", "MECHANIC")
                         .requestMatchers(HttpMethod.POST, "/api/orders", "/api/orders/drop-off").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/*").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
 
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/customers/me",
+                                "/api/customers/me/orders",
+                                "/api/customers/me/orders/*",
+                                "/api/customers/me/orders/*/documents",
+                                "/api/customers/me/orders/*/approvals",
+                                "/api/customers/me/vehicles",
+                                "/api/customers/me/vehicles/*",
+                                "/api/customers/me/vehicles/catalog/manufacturers",
+                                "/api/customers/me/vehicles/catalog/model-series",
+                                "/api/customers/me/vehicles/catalog/modifications",
+                                "/api/customers/me/vehicles/*/documents",
+                                "/api/customers/me/loyalty",
+                                "/api/customers/me/dashboard",
+                                "/api/customers/me/booking/services",
+                                "/api/customers/me/booking/slots",
+                                "/api/customers/me/documents").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.PUT, "/api/customers/me").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/customers/me/vehicles",
+                                "/api/customers/me/bookings",
+                                "/api/customers/me/bookings/*/cancel",
+                                "/api/customers/me/files/*/presigned-download-url",
+                                "/api/customers/me/orders/*/approvals/*/approve",
+                                "/api/customers/me/orders/*/approvals/*/reject").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/customers/me/vehicles/*",
+                                "/api/customers/me/bookings/*").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/customers/me/vehicles/*").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/customers", "/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.POST, "/api/customers", "/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")
                         .requestMatchers(HttpMethod.PUT, "/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "RECEPTIONIST")

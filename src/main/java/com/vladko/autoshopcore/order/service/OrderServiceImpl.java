@@ -100,6 +100,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    public OrderResponseDTO createForCustomer(OrderCreateDTO dto) {
+        coreSecurityService.requireRoles("CUSTOMER");
+        return createInternal(dto, false);
+    }
+
+    @Override
+    @Transactional
     public OrderResponseDTO createImmediateDropOff(OrderCreateDTO dto) {
         coreSecurityService.requireRoles("ADMIN", "MANAGER", "RECEPTIONIST");
         return createInternal(dto, true);
@@ -117,34 +124,14 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDTO update(Integer id, OrderUpdateDTO dto) {
         coreSecurityService.requireRoles("ADMIN", "MANAGER", "RECEPTIONIST");
-        Order order = findOrder(id);
-        ensureOrderIsMutable(order);
+        return updateMutableOrder(id, dto, false);
+    }
 
-        String normalizedProblem = normalizeOptionalText(dto.getProblem());
-        if (dto.getProblem() != null) {
-            order.setProblem(normalizedProblem == null ? order.getProblem() : normalizedProblem);
-        }
-        if (dto.getPlannedVisitAt() != null) {
-            ensurePlannedVisitMutable(order);
-            order.setPlannedVisitAt(dto.getPlannedVisitAt());
-        }
-        if (dto.getPlannedSlotMinutes() != null) {
-            order.setPlannedSlotMinutes(dto.getPlannedSlotMinutes());
-        }
-        if (dto.getBookingChannel() != null) {
-            order.setBookingChannel(dto.getBookingChannel());
-        }
-        if (dto.getIntakeNotes() != null) {
-            order.setIntakeNotes(normalizeOptionalText(dto.getIntakeNotes()));
-        }
-        if (dto.getRequiresOwnerApprovalForEveryExtraWork() != null) {
-            order.setRequiresOwnerApprovalForEveryExtraWork(dto.getRequiresOwnerApprovalForEveryExtraWork());
-        }
-        validateEmployeeAvailability(order.getEmployee(), order.getPlannedVisitAt(), resolveSlotMinutes(order.getPlannedSlotMinutes()), order.getId());
-        Order saved = orderRepository.save(order);
-        replaceServiceLines(saved, dto.getSelectedServiceIds());
-        repriceLaborFromSelectedServices(saved);
-        return mapToResponse(orderRepository.save(saved));
+    @Override
+    @Transactional
+    public OrderResponseDTO updateForCustomer(Integer id, OrderUpdateDTO dto) {
+        coreSecurityService.requireRoles("CUSTOMER");
+        return updateMutableOrder(id, dto, true);
     }
 
     @Override
@@ -386,6 +373,42 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(savedOrder);
     }
 
+    private OrderResponseDTO updateMutableOrder(Integer id, OrderUpdateDTO dto, boolean customerContext) {
+        Order order = findOrder(id);
+        if (customerContext) {
+            coreSecurityService.requireCustomerAccess(order);
+            ensureCustomerBookingEditable(order);
+        } else {
+            ensureOrderIsMutable(order);
+        }
+
+        String normalizedProblem = normalizeOptionalText(dto.getProblem());
+        if (dto.getProblem() != null) {
+            order.setProblem(normalizedProblem == null ? order.getProblem() : normalizedProblem);
+        }
+        if (dto.getPlannedVisitAt() != null) {
+            ensurePlannedVisitMutable(order);
+            order.setPlannedVisitAt(dto.getPlannedVisitAt());
+        }
+        if (dto.getPlannedSlotMinutes() != null) {
+            order.setPlannedSlotMinutes(dto.getPlannedSlotMinutes());
+        }
+        if (!customerContext && dto.getBookingChannel() != null) {
+            order.setBookingChannel(dto.getBookingChannel());
+        }
+        if (dto.getIntakeNotes() != null) {
+            order.setIntakeNotes(normalizeOptionalText(dto.getIntakeNotes()));
+        }
+        if (!customerContext && dto.getRequiresOwnerApprovalForEveryExtraWork() != null) {
+            order.setRequiresOwnerApprovalForEveryExtraWork(dto.getRequiresOwnerApprovalForEveryExtraWork());
+        }
+        validateEmployeeAvailability(order.getEmployee(), order.getPlannedVisitAt(), resolveSlotMinutes(order.getPlannedSlotMinutes()), order.getId());
+        Order saved = orderRepository.save(order);
+        replaceServiceLines(saved, dto.getSelectedServiceIds());
+        repriceLaborFromSelectedServices(saved);
+        return mapToResponse(orderRepository.save(saved));
+    }
+
     private void validateCreateInput(OrderCreateDTO dto) {
         boolean hasProblem = normalizeOptionalText(dto.getProblem()) != null;
         boolean hasServices = dto.getSelectedServiceIds() != null && !dto.getSelectedServiceIds().isEmpty();
@@ -500,6 +523,13 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    private void ensureCustomerBookingEditable(Order order) {
+        if (order.getStatus() != OrderStatus.WAITING_FOR_VISIT && order.getStatus() != OrderStatus.NEW) {
+            throw new InvalidOrderStateException("Customer cannot update order in status '%s'".formatted(order.getStatus()));
+        }
+        ensureOrderIsMutable(order);
+    }
+
     private void ensureEstimateIsEditable(Order order) {
         if (isTerminal(order.getStatus()) || order.getStatus() == OrderStatus.READY_FOR_OWNER || order.getStatus() == OrderStatus.HANDED_OVER) {
             throw new InvalidOrderStateException("Order in status '%s' can no longer be updated".formatted(order.getStatus()));
@@ -590,7 +620,10 @@ public class OrderServiceImpl implements OrderService {
         switch (targetStatus) {
             case ACCEPTED, HANDED_OVER, CANCELLED_NO_SHOW -> coreSecurityService.requireRoles("ADMIN", "MANAGER", "RECEPTIONIST");
             case DIAGNOSIS_IN_PROGRESS, REPAIR_IN_PROGRESS, READY_FOR_OWNER -> coreSecurityService.requireRoles("ADMIN", "MANAGER", "MECHANIC");
-            case CANCELLED_BY_CUSTOMER -> coreSecurityService.requireRoles("CUSTOMER", "ADMIN", "MANAGER");
+            case CANCELLED_BY_CUSTOMER -> {
+                coreSecurityService.requireRoles("CUSTOMER", "ADMIN", "MANAGER");
+                coreSecurityService.requireCustomerAccess(order);
+            }
             case CANCELLED_INTERNAL, WAITING_FOR_PART -> coreSecurityService.requireRoles("ADMIN", "MANAGER");
             case WAITING_FOR_OWNER_APPROVAL -> coreSecurityService.requireRoles("ADMIN", "MANAGER", "MECHANIC");
             default -> coreSecurityService.requireAnyStaff();

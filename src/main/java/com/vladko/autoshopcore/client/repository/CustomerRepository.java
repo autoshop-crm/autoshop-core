@@ -12,6 +12,8 @@ public interface CustomerRepository extends BaseRepository<Customer, Integer> {
 
     Optional<Customer> findByEmail(String email);
 
+    Optional<Customer> findByAuthUserId(Long authUserId);
+
     Optional<Customer> findByPhoneNumber(String phoneNumber);
 
     @Query(value = """
@@ -45,6 +47,8 @@ public interface CustomerRepository extends BaseRepository<Customer, Integer> {
     List<Customer> findByLastNameContainingIgnoreCase(String lastName);
 
     boolean existsByEmail(String email);
+
+    boolean existsByAuthUserId(Long authUserId);
 
     boolean existsByPhoneNumber(String phoneNumber);
 }

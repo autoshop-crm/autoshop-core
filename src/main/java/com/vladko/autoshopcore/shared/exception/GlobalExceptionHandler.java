@@ -2,6 +2,7 @@ package com.vladko.autoshopcore.shared.exception;
 
 import com.vladko.autoshopcore.client.exception.CustomerConflictException;
 import com.vladko.autoshopcore.client.exception.CustomerNotFoundException;
+import com.vladko.autoshopcore.customerauth.exception.CustomerAuthLinkageException;
 import com.vladko.autoshopcore.integration.shared.ExternalApiAuthenticationException;
 import com.vladko.autoshopcore.integration.shared.ExternalApiConfigurationException;
 import com.vladko.autoshopcore.integration.shared.ExternalApiContractException;
@@ -46,6 +47,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomerConflictException.class)
     public ResponseEntity<ErrorResponse> handleCustomerConflict(CustomerConflictException exception,
                                                                HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(CustomerAuthLinkageException.class)
+    public ResponseEntity<ErrorResponse> handleCustomerAuthLinkage(CustomerAuthLinkageException exception,
+                                                                   HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 

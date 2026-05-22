@@ -1,0 +1,26 @@
+# Ralph Context Snapshot
+
+- task statement: реализовать план из `docs/CRM_CUSTOMER_SELF_SERVICE_IMPLEMENTATION_PLAN_RU.md` последовательно и проверить тестами
+- desired outcome: customer can manage own vehicles, read booking services, create/update/cancel own bookings, read own order details; service remains green under tests
+- known facts/evidence:
+  - current self-service endpoints exist only for profile/orders/vehicles list/loyalty/dashboard
+  - staff vehicle CRUD exists and is reusable
+  - staff order create/update logic exists and is reusable but staff-oriented
+  - approval flow already supports customer ownership checks
+  - loyalty/dashboard read-only bug already fixed in current branch
+- constraints:
+  - do not expose staff endpoints directly to customer
+  - keep customer-safe DTOs without customerId/employeeId
+  - use existing ownership model and existing domain services where practical
+  - validate with tests after implementation
+- unknowns/open questions:
+  - exact delete rule for vehicles with active orders
+  - whether to add approvals alias endpoints now or later
+  - whether slot lookup must be fully implemented in this pass
+- likely codebase touchpoints:
+  - src/main/java/com/vladko/autoshopcore/client/**
+  - src/main/java/com/vladko/autoshopcore/configuration/SecurityConfiguration.java
+  - src/main/java/com/vladko/autoshopcore/order/**
+  - src/main/java/com/vladko/autoshopcore/vehicle/**
+  - src/main/java/com/vladko/autoshopcore/servicecatalog/**
+  - src/test/java/com/vladko/autoshopcore/client/**

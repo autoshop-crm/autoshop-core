@@ -27,3 +27,5 @@ databaseChangeLog:
       file: db/changelog/db.changelog-2.2-booking-channel-simplification.sql
   - include:
       file: db/changelog/db.changelog-2.3-orders-status-column-length.sql
+  - include:
+      file: db/changelog/db.changelog-2.4-customer-auth-linkage.sql

@@ -16,11 +16,15 @@ public interface OrderService {
 
     OrderResponseDTO create(OrderCreateDTO dto);
 
+    OrderResponseDTO createForCustomer(OrderCreateDTO dto);
+
     OrderResponseDTO createImmediateDropOff(OrderCreateDTO dto);
 
     OrderResponseDTO getById(Integer id);
 
     OrderResponseDTO update(Integer id, OrderUpdateDTO dto);
+
+    OrderResponseDTO updateForCustomer(Integer id, OrderUpdateDTO dto);
 
     OrderResponseDTO assignEmployee(Integer id, OrderAssignmentDTO dto);
 
