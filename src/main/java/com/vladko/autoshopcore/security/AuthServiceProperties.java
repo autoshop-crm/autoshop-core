@@ -8,6 +8,13 @@ import java.time.Duration;
 public record AuthServiceProperties(
         String baseUrl,
         String validatePath,
+        String customerRegisterPath,
+        String customerLoginPath,
+        String customerRefreshPath,
+        String customerLogoutPath,
+        String customerForgotPasswordPath,
+        String customerResetPasswordPath,
+        String customerVerifyEmailPath,
         Duration connectTimeout,
         Duration readTimeout,
         boolean enabled

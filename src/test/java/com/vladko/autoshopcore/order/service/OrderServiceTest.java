@@ -463,6 +463,45 @@ class OrderServiceTest {
     }
 
     @Test
+    void updateStatusShouldCheckCustomerOwnershipForCustomerCancellation() {
+        Customer customer = Customer.builder().id(1).email("client@test.com").build();
+        Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();
+        Order existingOrder = Order.builder()
+                .id(10)
+                .customer(customer)
+                .vehicle(vehicle)
+                .problem("Diagnostics")
+                .status(OrderStatus.WAITING_FOR_VISIT)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
+                .costsTotal(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .finalAmount(BigDecimal.ZERO)
+                .build();
+        Order cancelledOrder = Order.builder()
+                .id(10)
+                .customer(customer)
+                .vehicle(vehicle)
+                .problem("Diagnostics")
+                .status(OrderStatus.CANCELLED_BY_CUSTOMER)
+                .laborTotal(BigDecimal.ZERO)
+                .partsTotal(BigDecimal.ZERO)
+                .costsTotal(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .finalAmount(BigDecimal.ZERO)
+                .build();
+
+        when(orderRepository.findById(10)).thenReturn(Optional.of(existingOrder));
+        when(orderRepository.save(existingOrder)).thenReturn(cancelledOrder);
+        when(coreSecurityService.requireRoles("CUSTOMER", "ADMIN", "MANAGER"))
+                .thenReturn(new com.vladko.autoshopcore.security.CoreActor(9L, com.vladko.autoshopcore.order.timeline.entity.OrderTimelineActorType.CUSTOMER));
+
+        orderService.updateStatus(10, new OrderStatusUpdateDTO(OrderStatus.CANCELLED_BY_CUSTOMER));
+
+        verify(coreSecurityService).requireCustomerAccess(existingOrder);
+    }
+
+    @Test
     void updateStatusShouldRejectInvalidTransition() {
         Customer customer = Customer.builder().id(1).build();
         Vehicle vehicle = Vehicle.builder().id(2).customer(customer).build();

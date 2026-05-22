@@ -35,6 +35,13 @@ public class Customer implements BaseEntity<Integer> {
     @Column(name = "phone_number", unique = true, nullable = false, length = 16)
     private String phoneNumber;
 
+    @Column(name = "auth_user_id", unique = true)
+    private Long authUserId;
+
+    @Builder.Default
+    @Column(name = "email_verified", nullable = false)
+    private Boolean emailVerified = false;
+
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;
@@ -51,10 +58,16 @@ public class Customer implements BaseEntity<Integer> {
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
+        if (emailVerified == null) {
+            emailVerified = false;
+        }
     }
 
     @PreUpdate
     private void preUpdate() {
         updatedAt = Instant.now();
+        if (emailVerified == null) {
+            emailVerified = false;
+        }
     }
 }

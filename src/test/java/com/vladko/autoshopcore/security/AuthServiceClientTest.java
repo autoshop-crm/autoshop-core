@@ -24,6 +24,13 @@ class AuthServiceClientTest {
     private final AuthServiceProperties properties = new AuthServiceProperties(
             "http://auth-service",
             "/api/auth/validate",
+            "/api/customer-auth/register",
+            "/api/customer-auth/login",
+            "/api/customer-auth/refresh",
+            "/api/customer-auth/logout",
+            "/api/customer-auth/password/forgot",
+            "/api/customer-auth/password/reset",
+            "/api/customer-auth/email/verify",
             Duration.ofSeconds(1),
             Duration.ofSeconds(2),
             true

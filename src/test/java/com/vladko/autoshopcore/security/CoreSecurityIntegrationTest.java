@@ -6,6 +6,8 @@ import com.vladko.autoshopcore.client.dto.CustomerCreateDTO;
 import com.vladko.autoshopcore.client.service.CustomerService;
 import com.vladko.autoshopcore.configuration.SecurityConfiguration;
 import com.vladko.autoshopcore.order.controller.OrderController;
+import com.vladko.autoshopcore.client.controller.CustomerVehicleCatalogLookupController;
+import com.vladko.autoshopcore.parts.service.catalog.VehicleCatalogLookupService;
 import com.vladko.autoshopcore.order.dto.OrderResponseDTO;
 import com.vladko.autoshopcore.order.dto.OrderStatusUpdateDTO;
 import com.vladko.autoshopcore.order.entity.OrderStatus;
@@ -41,7 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = {
         CustomerController.class,
         OrderController.class,
-        PurchaseOrderController.class
+        PurchaseOrderController.class,
+        CustomerVehicleCatalogLookupController.class
 })
 @Import({
         SecurityConfiguration.class
@@ -65,6 +68,9 @@ class CoreSecurityIntegrationTest {
 
     @MockitoBean
     private PurchaseOrderService purchaseOrderService;
+
+    @MockitoBean
+    private VehicleCatalogLookupService vehicleCatalogLookupService;
 
     @Test
     void protectedEndpointWithoutTokenReturnsUnauthorized() throws Exception {
@@ -123,6 +129,27 @@ class CoreSecurityIntegrationTest {
                                 .build())))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Access denied"));
+    }
+
+
+    @Test
+    void customerCanAccessVehicleCatalogManufacturers() throws Exception {
+        when(authServiceClient.validateAccessToken("customer-token"))
+                .thenReturn(user("CUSTOMER"));
+        when(vehicleCatalogLookupService.getManufacturers("PC", true)).thenReturn(java.util.List.of(
+                com.vladko.autoshopcore.parts.dto.catalog.CatalogManufacturerResponseDTO.builder()
+                        .type("PC")
+                        .manufacturerId(111)
+                        .name("TOYOTA")
+                        .build()
+        ));
+
+        mockMvc.perform(get("/api/customers/me/vehicles/catalog/manufacturers")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("customer-token"))
+                        .param("type", "PC")
+                        .param("popular", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].manufacturerId").value(111));
     }
 
     @Test

@@ -22,6 +22,8 @@ public class CustomerResponseDTO {
 
     private String email;
 
+    private Boolean emailVerified;
+
     private Instant createdAt;
 
     private Instant updatedAt;

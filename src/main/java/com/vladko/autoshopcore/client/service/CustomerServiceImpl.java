@@ -171,6 +171,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
                 .email(customer.getEmail())
+                .emailVerified(customer.getEmailVerified())
                 .phoneNumber(customer.getPhoneNumber())
                 .createdAt(customer.getCreatedAt())
                 .updatedAt(customer.getUpdatedAt())

@@ -55,7 +55,18 @@ public class CoreSecurityServiceImpl implements CoreSecurityService {
         if (!(principal instanceof AuthenticatedUser authenticatedUser)) {
             throw new AccessDeniedException("Authenticated customer principal is required");
         }
-        if (order.getCustomer() == null || order.getCustomer().getId() == null || !authenticatedUser.userId().equals(order.getCustomer().getId().longValue())) {
+        if (order.getCustomer() == null) {
+            throw new AccessDeniedException("Customer cannot access this order");
+        }
+        Long linkedAuthUserId = order.getCustomer().getAuthUserId();
+        if (linkedAuthUserId != null) {
+            if (!authenticatedUser.userId().equals(linkedAuthUserId)) {
+                throw new AccessDeniedException("Customer cannot access this order");
+            }
+            return;
+        }
+        String customerEmail = order.getCustomer().getEmail();
+        if (customerEmail == null || !customerEmail.equalsIgnoreCase(authenticatedUser.email())) {
             throw new AccessDeniedException("Customer cannot access this order");
         }
     }
