@@ -117,6 +117,7 @@ public class SecurityConfiguration {
                                 "/api/customers/me/loyalty",
                                 "/api/customers/me/dashboard",
                                 "/api/customers/me/booking/services",
+                                "/api/customers/me/booking/availability",
                                 "/api/customers/me/booking/slots",
                                 "/api/customers/me/documents").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.PUT, "/api/customers/me").hasRole("CUSTOMER")

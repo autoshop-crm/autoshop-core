@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.client.controller;
 
+import com.vladko.autoshopcore.client.dto.CustomerBookingAvailabilityResponseDTO;
 import com.vladko.autoshopcore.client.dto.CustomerBookingSlotResponseDTO;
 import com.vladko.autoshopcore.client.service.CustomerBookingSlotService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,14 @@ import java.util.List;
 public class CustomerBookingSlotController {
 
     private final CustomerBookingSlotService customerBookingSlotService;
+
+    @GetMapping("/availability")
+    public ResponseEntity<List<CustomerBookingAvailabilityResponseDTO>> lookupAvailability(@RequestParam Integer vehicleId,
+                                                                                           @RequestParam(required = false) List<Integer> serviceIds,
+                                                                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                                                           @RequestParam(required = false) Integer days) {
+        return ResponseEntity.ok(customerBookingSlotService.lookupAvailability(vehicleId, serviceIds, from, days));
+    }
 
     @GetMapping("/slots")
     public ResponseEntity<List<CustomerBookingSlotResponseDTO>> lookupSlots(@RequestParam Integer vehicleId,

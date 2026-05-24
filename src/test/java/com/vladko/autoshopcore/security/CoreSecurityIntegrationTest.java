@@ -2,7 +2,10 @@ package com.vladko.autoshopcore.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vladko.autoshopcore.client.controller.CustomerController;
+import com.vladko.autoshopcore.client.controller.CustomerBookingSlotController;
+import com.vladko.autoshopcore.client.dto.CustomerBookingAvailabilityResponseDTO;
 import com.vladko.autoshopcore.client.dto.CustomerCreateDTO;
+import com.vladko.autoshopcore.client.service.CustomerBookingSlotService;
 import com.vladko.autoshopcore.client.service.CustomerService;
 import com.vladko.autoshopcore.configuration.SecurityConfiguration;
 import com.vladko.autoshopcore.order.controller.OrderController;
@@ -42,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = {
         CustomerController.class,
+        CustomerBookingSlotController.class,
         OrderController.class,
         PurchaseOrderController.class,
         CustomerVehicleCatalogLookupController.class
@@ -62,6 +66,9 @@ class CoreSecurityIntegrationTest {
 
     @MockitoBean
     private CustomerService customerService;
+
+    @MockitoBean
+    private CustomerBookingSlotService customerBookingSlotService;
 
     @MockitoBean
     private OrderService orderService;
@@ -111,6 +118,28 @@ class CoreSecurityIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, bearer("manager-token")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void customerCanGetBookingAvailability() throws Exception {
+        when(authServiceClient.validateAccessToken("customer-token"))
+                .thenReturn(user("CUSTOMER"));
+        when(customerBookingSlotService.lookupAvailability(1, List.of(1), java.time.LocalDate.of(2026, 5, 24), 30))
+                .thenReturn(List.of(CustomerBookingAvailabilityResponseDTO.builder()
+                        .date(java.time.LocalDate.of(2026, 5, 24))
+                        .available(true)
+                        .reason(null)
+                        .build()));
+
+        mockMvc.perform(get("/api/customers/me/booking/availability")
+                        .queryParam("vehicleId", "1")
+                        .queryParam("serviceIds", "1")
+                        .queryParam("from", "2026-05-24")
+                        .queryParam("days", "30")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("customer-token")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].date").value("2026-05-24"))
+                .andExpect(jsonPath("$[0].available").value(true));
     }
 
     @Test

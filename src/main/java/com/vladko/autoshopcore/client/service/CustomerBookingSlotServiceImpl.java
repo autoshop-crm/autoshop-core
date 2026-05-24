@@ -1,5 +1,6 @@
 package com.vladko.autoshopcore.client.service;
 
+import com.vladko.autoshopcore.client.dto.CustomerBookingAvailabilityResponseDTO;
 import com.vladko.autoshopcore.client.dto.CustomerBookingSlotResponseDTO;
 import com.vladko.autoshopcore.client.entity.Customer;
 import com.vladko.autoshopcore.customerauth.service.CustomerIdentityLinkService;
@@ -20,7 +21,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -66,6 +69,36 @@ public class CustomerBookingSlotServiceImpl implements CustomerBookingSlotServic
             }
         }
         return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerBookingAvailabilityResponseDTO> lookupAvailability(Integer vehicleId,
+                                                                          List<Integer> serviceIds,
+                                                                          LocalDate from,
+                                                                          Integer days) {
+        LocalDate effectiveFrom = from == null ? LocalDate.now(ZoneOffset.UTC) : from;
+        int effectiveDays = days == null ? DEFAULT_DAYS : Math.min(Math.max(days, 1), 30);
+        List<CustomerBookingSlotResponseDTO> slots = lookupSlots(vehicleId, serviceIds, effectiveFrom, effectiveDays, null);
+
+        Map<LocalDate, Boolean> availabilityByDay = new LinkedHashMap<>();
+        for (int day = 0; day < effectiveDays; day++) {
+            availabilityByDay.put(effectiveFrom.plusDays(day), false);
+        }
+        for (CustomerBookingSlotResponseDTO slot : slots) {
+            LocalDate slotDate = slot.getStartAt().atOffset(ZoneOffset.UTC).toLocalDate();
+            if (slot.isAvailable()) {
+                availabilityByDay.put(slotDate, true);
+            }
+        }
+
+        return availabilityByDay.entrySet().stream()
+                .map(entry -> CustomerBookingAvailabilityResponseDTO.builder()
+                        .date(entry.getKey())
+                        .available(entry.getValue())
+                        .reason(entry.getValue() ? null : "FULL")
+                        .build())
+                .toList();
     }
 
     private int resolveSlotMinutes(List<Integer> serviceIds, Integer slotMinutes) {
